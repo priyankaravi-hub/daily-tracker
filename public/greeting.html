@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Good morning! — WDYD</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Inter',system-ui,sans-serif;background:#111827;color:#d1d5db;height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden}
+    .container{text-align:center;padding:3rem;max-width:480px;animation:fadeIn .6s ease-out}
+    .robot{position:relative;width:320px;margin:0 auto 2.5rem;animation:wave 2s ease-in-out infinite;transform-origin:50% 90%}
+    .robot img{width:100%;height:auto;display:block;border-radius:24px;filter:drop-shadow(0 12px 40px rgba(201,169,106,.35));border:3px solid rgba(201,169,106,.2)}
+    .robot::after{content:'';position:absolute;inset:-8px;border-radius:32px;background:radial-gradient(ellipse at center,rgba(201,169,106,.12) 0%,transparent 70%);z-index:-1;animation:glow 3s ease-in-out infinite alternate}
+    @keyframes glow{from{opacity:.5;transform:scale(.95)}to{opacity:1;transform:scale(1.05)}}
+    .greeting{font-size:1.1rem;color:#9ca3af;margin-bottom:.5rem}
+    .main-text{font-size:1.8rem;font-weight:800;color:#C9A96A;margin-bottom:.5rem;line-height:1.2}
+    .sub-text{font-size:.9rem;color:#6b7280;margin-bottom:2rem}
+    .typing{display:inline}.typing::after{content:'|';animation:cursor .8s step-end infinite;color:#C9A96A}
+    .start-btn{display:inline-flex;align-items:center;gap:8px;background:#C9A96A;color:#111827;font-weight:700;font-size:1rem;padding:14px 32px;border:none;border-radius:14px;cursor:pointer;transition:all .2s;text-decoration:none}
+    .start-btn:hover{background:#b5955a;transform:translateY(-2px);box-shadow:0 8px 24px rgba(201,169,106,.3)}
+    .start-btn:active{transform:scale(.97)}
+    .skip-btn{display:block;margin:1rem auto 0;background:none;border:none;color:#4b5563;font-size:.8rem;cursor:pointer;padding:8px}
+    .skip-btn:hover{color:#9ca3af}
+    .particles{position:fixed;top:0;left:0;right:0;bottom:0;pointer-events:none;overflow:hidden}
+    .particle{position:absolute;width:3px;height:3px;background:#C9A96A;border-radius:50%;opacity:.15;animation:float linear infinite}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes wave{0%,100%{transform:rotate(0deg)}15%{transform:rotate(3deg)}30%{transform:rotate(-3deg)}45%{transform:rotate(2deg)}60%{transform:rotate(0deg)}}
+    @keyframes cursor{50%{opacity:0}}
+    @keyframes float{from{transform:translateY(100vh) rotate(0);opacity:0}10%{opacity:.15}90%{opacity:.15}to{transform:translateY(-10px) rotate(360deg);opacity:0}}
+  </style>
+</head>
+<body>
+  <div class="particles" id="particles"></div>
+  <div class="container">
+    <div class="robot">
+      <img src="robot.jpeg" alt="WDYD Bot" />
+    </div>
+    <p class="greeting" id="greeting"></p>
+    <h1 class="main-text">What do you do<span class="typing"></span></h1>
+    <p class="sub-text">Let's get today's work logged.</p>
+    <button class="start-btn" onclick="window.parent.postMessage('close-greeting','*')">Let's go →</button>
+    <button class="skip-btn" onclick="window.parent.postMessage('close-greeting','*')">Not now</button>
+  </div>
+  <script>
+    const hour=new Date().getHours();let g='Hey Priyanka!';
+    if(hour<6)g='Up early, Priyanka?';else if(hour<12)g='Good morning, Priyanka!';
+    else if(hour<17)g='Good afternoon, Priyanka!';else if(hour<21)g='Good evening, Priyanka!';
+    else g='Burning midnight oil, Priyanka?';
+    document.getElementById('greeting').textContent=g;
+    const c=document.getElementById('particles');
+    for(let i=0;i<20;i++){const p=document.createElement('div');p.className='particle';
+    p.style.left=Math.random()*100+'%';p.style.animationDuration=(8+Math.random()*12)+'s';
+    p.style.animationDelay=Math.random()*10+'s';p.style.width=p.style.height=(2+Math.random()*3)+'px';
+    c.appendChild(p)}setTimeout(()=>window.close(),300000);
+  </script>
+</body>
+</html>

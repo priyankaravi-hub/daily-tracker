@@ -1,0 +1,75 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #374151;
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #4B5563;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-navy-800/80 backdrop-blur-lg border border-navy-700/50 shadow-lg rounded-2xl;
+  }
+
+  .btn-primary {
+    @apply bg-primary-400 hover:bg-primary-500 text-navy-900 font-medium px-4 py-2 rounded-xl
+           transition-all duration-200 hover:shadow-lg hover:shadow-primary-400/25 active:scale-95;
+  }
+
+  .btn-ghost {
+    @apply hover:bg-navy-700 text-gray-400 font-medium px-4 py-2 rounded-xl
+           transition-all duration-200 active:scale-95;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-2.5 rounded-xl border border-navy-700 bg-navy-800
+           focus:ring-2 focus:ring-primary-400/30 focus:border-primary-400
+           outline-none transition-all duration-200 text-gray-200 placeholder-gray-500;
+  }
+
+  .tag-pill {
+    @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium
+           transition-all duration-200 cursor-pointer;
+  }
+
+  .xp-bar {
+    @apply h-3 rounded-full bg-navy-700 overflow-hidden;
+  }
+
+  .xp-fill {
+    @apply h-full rounded-full bg-gradient-to-r from-primary-400 to-primary-600
+           transition-all duration-700 ease-out;
+  }
+
+  .streak-fire {
+    @apply text-3xl animate-bounce-in;
+  }
+
+  .card-hover {
+    @apply transition-all duration-200 hover:shadow-md hover:-translate-y-0.5;
+  }
+}
