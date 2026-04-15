@@ -9,10 +9,16 @@
     *{margin:0;padding:0;box-sizing:border-box}
     body{font-family:'Inter',system-ui,sans-serif;background:#111827;color:#d1d5db;height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden}
     .container{text-align:center;padding:3rem;max-width:480px;animation:fadeIn .6s ease-out}
-    .robot{position:relative;width:320px;margin:0 auto 2.5rem;animation:wave 2s ease-in-out infinite;transform-origin:50% 90%}
-    .robot img{width:100%;height:auto;display:block;border-radius:24px;filter:drop-shadow(0 12px 40px rgba(201,169,106,.35));border:3px solid rgba(201,169,106,.2)}
-    .robot::after{content:'';position:absolute;inset:-8px;border-radius:32px;background:radial-gradient(ellipse at center,rgba(201,169,106,.12) 0%,transparent 70%);z-index:-1;animation:glow 3s ease-in-out infinite alternate}
-    @keyframes glow{from{opacity:.5;transform:scale(.95)}to{opacity:1;transform:scale(1.05)}}
+    .mascot{position:relative;width:260px;margin:0 auto 2.5rem;animation:bob 3s ease-in-out infinite;transform-origin:50% 90%}
+    .mascot svg{width:100%;height:auto;display:block;filter:drop-shadow(0 16px 48px rgba(201,169,106,.3)) drop-shadow(0 4px 12px rgba(92,124,250,.2))}
+    .mascot::after{content:'';position:absolute;bottom:-10px;left:50%;transform:translateX(-50%);width:60%;height:20px;background:radial-gradient(ellipse,rgba(201,169,106,.18) 0%,transparent 70%);border-radius:50%;animation:shadow-pulse 3s ease-in-out infinite}
+    @keyframes bob{0%,100%{transform:translateY(0) rotate(0deg)}25%{transform:translateY(-8px) rotate(1.5deg)}50%{transform:translateY(-2px) rotate(0deg)}75%{transform:translateY(-10px) rotate(-1.5deg)}}
+    @keyframes shadow-pulse{0%,100%{opacity:.6;transform:translateX(-50%) scaleX(1)}50%{opacity:.3;transform:translateX(-50%) scaleX(.85)}}
+    .sparkle{position:absolute;animation:twinkle 2s ease-in-out infinite}
+    .sparkle:nth-child(2){top:8%;left:10%;animation-delay:0s}
+    .sparkle:nth-child(3){top:15%;right:8%;animation-delay:.7s}
+    .sparkle:nth-child(4){bottom:25%;left:5%;animation-delay:1.3s}
+    @keyframes twinkle{0%,100%{opacity:0;transform:scale(.5) rotate(0deg)}50%{opacity:1;transform:scale(1) rotate(180deg)}}
     .greeting{font-size:1.1rem;color:#9ca3af;margin-bottom:.5rem}
     .main-text{font-size:1.8rem;font-weight:800;color:#C9A96A;margin-bottom:.5rem;line-height:1.2}
     .sub-text{font-size:.9rem;color:#6b7280;margin-bottom:2rem}
@@ -33,8 +39,129 @@
 <body>
   <div class="particles" id="particles"></div>
   <div class="container">
-    <div class="robot">
-      <img src="robot.jpeg" alt="WDYD Bot" />
+    <div class="mascot">
+      <svg viewBox="0 0 260 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="bodyGrad" cx="50%" cy="40%" r="55%">
+            <stop offset="0%" stop-color="#FFFFFF"/>
+            <stop offset="100%" stop-color="#E8EAF0"/>
+          </radialGradient>
+          <radialGradient id="headGrad" cx="50%" cy="40%" r="55%">
+            <stop offset="0%" stop-color="#FFFFFF"/>
+            <stop offset="100%" stop-color="#F0F1F5"/>
+          </radialGradient>
+          <linearGradient id="hornGrad" x1="50%" y1="0%" x2="50%" y2="100%">
+            <stop offset="0%" stop-color="#FFD97D"/>
+            <stop offset="50%" stop-color="#C9A96A"/>
+            <stop offset="100%" stop-color="#E8C55A"/>
+          </linearGradient>
+          <linearGradient id="maneGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#C9A96A"/>
+            <stop offset="100%" stop-color="#E8D5A0"/>
+          </linearGradient>
+          <radialGradient id="cheekGrad" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#FFB8C6"/>
+            <stop offset="100%" stop-color="#FF8FAA" stop-opacity="0.4"/>
+          </radialGradient>
+          <radialGradient id="earInner" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#FFDDE5"/>
+            <stop offset="100%" stop-color="#FFB8C6" stop-opacity="0.5"/>
+          </radialGradient>
+          <radialGradient id="shirtGrad" cx="50%" cy="30%" r="65%">
+            <stop offset="0%" stop-color="#5C7CFA"/>
+            <stop offset="100%" stop-color="#3B5BDB"/>
+          </radialGradient>
+          <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#FFD97D"/>
+            <stop offset="50%" stop-color="#C9A96A"/>
+            <stop offset="100%" stop-color="#E8C55A"/>
+          </linearGradient>
+        </defs>
+
+        <!-- Body (white plushie) -->
+        <ellipse cx="130" cy="190" rx="90" ry="95" fill="url(#bodyGrad)"/>
+
+        <!-- T-shirt -->
+        <path d="M52 155 Q55 130 90 125 Q110 140 130 140 Q150 140 170 125 Q205 130 208 155 L210 230 Q210 250 190 255 L70 255 Q50 250 50 230 Z" fill="url(#shirtGrad)"/>
+        <!-- Shirt neckline -->
+        <path d="M90 125 Q110 142 130 142 Q150 142 170 125" stroke="#4A6CF7" stroke-width="2" fill="none"/>
+        <!-- Shirt stitch detail -->
+        <path d="M65 240 Q130 235 195 240" stroke="#4A6CF7" stroke-width="1" fill="none" stroke-dasharray="4 3" opacity=".4"/>
+
+        <!-- "Upscale AI" logo text on shirt -->
+        <text x="130" y="185" text-anchor="middle" font-family="'Inter',system-ui,sans-serif" font-weight="800" font-size="16" fill="url(#logoGrad)">Upscale AI</text>
+        <!-- Subtle underline accent -->
+        <line x1="95" y1="190" x2="165" y2="190" stroke="url(#logoGrad)" stroke-width="1.5" opacity=".5"/>
+
+        <!-- Plushie seam on shirt -->
+        <path d="M130 145 L130 165" stroke="#4A6CF7" stroke-width="1" fill="none" stroke-dasharray="3 3" opacity=".25"/>
+
+        <!-- Head (white) -->
+        <ellipse cx="130" cy="100" rx="72" ry="65" fill="url(#headGrad)"/>
+        <!-- Subtle head contour -->
+        <ellipse cx="130" cy="100" rx="72" ry="65" fill="none" stroke="#D5D8E0" stroke-width="1" opacity=".4"/>
+
+        <!-- Ears (white with pink inner) -->
+        <ellipse cx="72" cy="55" rx="22" ry="30" fill="#F0F1F5" transform="rotate(-15 72 55)"/>
+        <ellipse cx="72" cy="58" rx="12" ry="18" fill="url(#earInner)" transform="rotate(-15 72 58)" opacity=".6"/>
+        <ellipse cx="188" cy="55" rx="22" ry="30" fill="#F0F1F5" transform="rotate(15 188 55)"/>
+        <ellipse cx="188" cy="58" rx="12" ry="18" fill="url(#earInner)" transform="rotate(15 188 58)" opacity=".6"/>
+
+        <!-- Horn (golden spiral) -->
+        <path d="M130 8 L116 55 Q130 47 144 55 Z" fill="url(#hornGrad)"/>
+        <path d="M123 40 Q130 35 137 40" stroke="#B5955A" stroke-width="1.2" fill="none" opacity=".5"/>
+        <path d="M121 30 Q130 25 139 30" stroke="#B5955A" stroke-width="1.2" fill="none" opacity=".5"/>
+        <path d="M125 19 Q130 15 135 19" stroke="#B5955A" stroke-width="1.2" fill="none" opacity=".5"/>
+        <circle cx="128" cy="18" r="2.5" fill="#FFF5D4" opacity=".9"/>
+
+        <!-- Mane (golden swoops) -->
+        <path d="M90 38 Q72 58 80 88 Q87 70 95 60 Q84 52 90 38Z" fill="url(#maneGrad)" opacity=".9"/>
+        <path d="M80 55 Q62 78 72 108 Q80 90 88 80 Q78 70 80 55Z" fill="url(#maneGrad)" opacity=".7"/>
+        <path d="M72 78 Q56 100 68 128 Q76 110 84 100 Q74 90 72 78Z" fill="url(#maneGrad)" opacity=".5"/>
+
+        <!-- Eyes -->
+        <ellipse cx="108" cy="95" rx="12" ry="14" fill="#1a1a2e"/>
+        <ellipse cx="152" cy="95" rx="12" ry="14" fill="#1a1a2e"/>
+        <!-- Eye shine -->
+        <circle cx="113" cy="89" r="5" fill="white" opacity=".9"/>
+        <circle cx="157" cy="89" r="5" fill="white" opacity=".9"/>
+        <circle cx="105" cy="97" r="2.5" fill="white" opacity=".5"/>
+        <circle cx="149" cy="97" r="2.5" fill="white" opacity=".5"/>
+
+        <!-- Cute smile -->
+        <path d="M118 113 Q130 124 142 113" stroke="#555" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <!-- Tiny nose -->
+        <ellipse cx="130" cy="106" rx="3" ry="2" fill="#D5D8E0"/>
+
+        <!-- Blush cheeks -->
+        <ellipse cx="86" cy="108" rx="12" ry="7" fill="url(#cheekGrad)" opacity=".45"/>
+        <ellipse cx="174" cy="108" rx="12" ry="7" fill="url(#cheekGrad)" opacity=".45"/>
+
+        <!-- Arms (white, poking out of shirt sleeves) -->
+        <ellipse cx="42" cy="178" rx="20" ry="30" fill="#F0F1F5" transform="rotate(22 42 178)"/>
+        <ellipse cx="218" cy="178" rx="20" ry="30" fill="#F0F1F5" transform="rotate(-22 218 178)"/>
+        <!-- Sleeve edges -->
+        <path d="M55 155 Q48 162 42 158" stroke="#4A6CF7" stroke-width="2" fill="none" opacity=".6"/>
+        <path d="M205 155 Q212 162 218 158" stroke="#4A6CF7" stroke-width="2" fill="none" opacity=".6"/>
+        <!-- Arm stitch -->
+        <path d="M36 170 Q42 165 48 170" stroke="#D5D8E0" stroke-width="1" fill="none" stroke-dasharray="3 2" opacity=".5"/>
+        <path d="M212 170 Q218 165 224 170" stroke="#D5D8E0" stroke-width="1" fill="none" stroke-dasharray="3 2" opacity=".5"/>
+
+        <!-- Legs (white plushie feet) -->
+        <ellipse cx="95" cy="282" rx="30" ry="18" fill="#F0F1F5"/>
+        <ellipse cx="165" cy="282" rx="30" ry="18" fill="#F0F1F5"/>
+        <!-- Gold hooves -->
+        <ellipse cx="95" cy="287" rx="20" ry="9" fill="#C9A96A" opacity=".65"/>
+        <ellipse cx="165" cy="287" rx="20" ry="9" fill="#C9A96A" opacity=".65"/>
+
+        <!-- Tail (golden wisp) -->
+        <path d="M220 215 Q248 198 242 168 Q238 185 228 190 Q246 172 242 152" stroke="url(#maneGrad)" stroke-width="7" fill="none" stroke-linecap="round" opacity=".8"/>
+        <path d="M242 152 Q238 140 244 130" stroke="url(#maneGrad)" stroke-width="4.5" fill="none" stroke-linecap="round" opacity=".6"/>
+      </svg>
+      <!-- Floating sparkles -->
+      <svg class="sparkle" width="16" height="16" viewBox="0 0 16 16"><polygon points="8,0 10,6 16,8 10,10 8,16 6,10 0,8 6,6" fill="#C9A96A" opacity=".7"/></svg>
+      <svg class="sparkle" width="12" height="12" viewBox="0 0 16 16"><polygon points="8,0 10,6 16,8 10,10 8,16 6,10 0,8 6,6" fill="#FFD97D" opacity=".6"/></svg>
+      <svg class="sparkle" width="10" height="10" viewBox="0 0 16 16"><polygon points="8,0 10,6 16,8 10,10 8,16 6,10 0,8 6,6" fill="#C9A96A" opacity=".5"/></svg>
     </div>
     <p class="greeting" id="greeting"></p>
     <h1 class="main-text">What do you do<span class="typing"></span></h1>
