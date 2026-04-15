@@ -8,6 +8,7 @@ import TaskModal from './TaskModal'
 import MoodTracker from './MoodTracker'
 import LearningsPanel from './LearningsPanel'
 import { Plus, ChevronLeft, ChevronRight, Calendar, Sparkles, ListTodo, Trophy, Zap } from 'lucide-react'
+import Mascot from './Mascot'
 
 export default function DailyView() {
   const [currentDate, setCurrentDate] = useState(new Date())
@@ -50,13 +51,16 @@ export default function DailyView() {
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-2">
-          <div>
-            <p className="text-sm text-gray-400 font-medium">{getGreeting()}, Priyanka!</p>
-            <h1 className="text-2xl font-bold text-gray-100">
-              {format(currentDate, 'EEE, MMM d')}
-              {isToday(currentDate) && <span className="ml-2 text-sm font-medium text-primary-400">Today</span>}
-              {isYesterday(currentDate) && <span className="ml-2 text-sm font-medium text-gray-500">Yesterday</span>}
-            </h1>
+          <div className="flex items-center gap-3">
+            <Mascot size={64} className="flex-shrink-0 -mb-1" />
+            <div>
+              <p className="text-sm text-gray-400 font-medium">{getGreeting()}, Priyanka!</p>
+              <h1 className="text-2xl font-bold text-gray-100">
+                {format(currentDate, 'EEE, MMM d')}
+                {isToday(currentDate) && <span className="ml-2 text-sm font-medium text-primary-400">Today</span>}
+                {isYesterday(currentDate) && <span className="ml-2 text-sm font-medium text-gray-500">Yesterday</span>}
+              </h1>
+            </div>
           </div>
 
           <div className="flex items-center gap-2">
@@ -170,7 +174,7 @@ export default function DailyView() {
 
           {(!tasks || tasks.length === 0) && (
             <div className="text-center py-12">
-              <div className="text-4xl mb-3">📋</div>
+              <Mascot size={100} className="mx-auto mb-3" />
               <p className="text-gray-400 text-sm">No tasks for this day yet.</p>
               <p className="text-gray-300 text-xs mt-1">Click "Add a task" to get started!</p>
             </div>

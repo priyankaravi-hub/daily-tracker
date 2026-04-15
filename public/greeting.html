@@ -137,15 +137,19 @@
         <ellipse cx="86" cy="108" rx="12" ry="7" fill="url(#cheekGrad)" opacity=".45"/>
         <ellipse cx="174" cy="108" rx="12" ry="7" fill="url(#cheekGrad)" opacity=".45"/>
 
-        <!-- Arms (white, poking out of shirt sleeves) -->
+        <!-- Left arm (static) -->
         <ellipse cx="42" cy="178" rx="20" ry="30" fill="#F0F1F5" transform="rotate(22 42 178)"/>
-        <ellipse cx="218" cy="178" rx="20" ry="30" fill="#F0F1F5" transform="rotate(-22 218 178)"/>
-        <!-- Sleeve edges -->
         <path d="M55 155 Q48 162 42 158" stroke="#4A6CF7" stroke-width="2" fill="none" opacity=".6"/>
-        <path d="M205 155 Q212 162 218 158" stroke="#4A6CF7" stroke-width="2" fill="none" opacity=".6"/>
-        <!-- Arm stitch -->
         <path d="M36 170 Q42 165 48 170" stroke="#D5D8E0" stroke-width="1" fill="none" stroke-dasharray="3 2" opacity=".5"/>
-        <path d="M212 170 Q218 165 224 170" stroke="#D5D8E0" stroke-width="1" fill="none" stroke-dasharray="3 2" opacity=".5"/>
+
+        <!-- Right arm (waving!) -->
+        <g>
+          <ellipse cx="218" cy="178" rx="20" ry="30" fill="#F0F1F5" transform="rotate(-22 218 178)">
+            <animateTransform attributeName="transform" type="rotate" values="-22 218 178;-55 210 160;-22 218 178;-60 208 158;-22 218 178" dur="1.6s" repeatCount="indefinite" keyTimes="0;0.2;0.5;0.7;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1;0.42 0 0.58 1;0.42 0 0.58 1"/>
+          </ellipse>
+          <path d="M205 155 Q212 162 218 158" stroke="#4A6CF7" stroke-width="2" fill="none" opacity=".6"/>
+          <path d="M212 170 Q218 165 224 170" stroke="#D5D8E0" stroke-width="1" fill="none" stroke-dasharray="3 2" opacity=".5"/>
+        </g>
 
         <!-- Legs (white plushie feet) -->
         <ellipse cx="95" cy="282" rx="30" ry="18" fill="#F0F1F5"/>
