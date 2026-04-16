@@ -3,124 +3,123 @@ import React from 'react'
 export default function Mascot({ size = 120, className = '' }) {
   return (
     <div className={`inline-block ${className}`} style={{ width: size }}>
-      <svg viewBox="0 0 260 300" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', height: 'auto' }}>
+      <svg viewBox="0 0 280 310" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', height: 'auto' }}>
         <defs>
-          <radialGradient id="mBodyGrad" cx="50%" cy="40%" r="55%">
-            <stop offset="0%" stopColor="#FFFFFF"/>
-            <stop offset="100%" stopColor="#E8EAF0"/>
+          <radialGradient id="mKnitGrad" cx="45%" cy="38%" r="58%">
+            <stop offset="0%" stopColor="#F5ECD7"/>
+            <stop offset="60%" stopColor="#E8DFC8"/>
+            <stop offset="100%" stopColor="#D9CEAD"/>
           </radialGradient>
-          <radialGradient id="mHeadGrad" cx="50%" cy="40%" r="55%">
-            <stop offset="0%" stopColor="#FFFFFF"/>
-            <stop offset="100%" stopColor="#F0F1F5"/>
+          <radialGradient id="mKnitHead" cx="48%" cy="40%" r="55%">
+            <stop offset="0%" stopColor="#F5ECD7"/>
+            <stop offset="100%" stopColor="#E5DCCA"/>
           </radialGradient>
-          <linearGradient id="mHornGrad" x1="50%" y1="0%" x2="50%" y2="100%">
-            <stop offset="0%" stopColor="#FFD97D"/>
+          <linearGradient id="mHornGrad" x1="30%" y1="0%" x2="70%" y2="100%">
+            <stop offset="0%" stopColor="#E8E8EE"/>
+            <stop offset="30%" stopColor="#C8C8D4"/>
+            <stop offset="60%" stopColor="#D8D8E2"/>
+            <stop offset="100%" stopColor="#B0B0BE"/>
+          </linearGradient>
+          <radialGradient id="mShirtGrad" cx="50%" cy="35%" r="60%">
+            <stop offset="0%" stopColor="#1E2A4A"/>
+            <stop offset="100%" stopColor="#141E36"/>
+          </radialGradient>
+          <linearGradient id="mLogoGold" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#D4B96A"/>
             <stop offset="50%" stopColor="#C9A96A"/>
-            <stop offset="100%" stopColor="#E8C55A"/>
+            <stop offset="100%" stopColor="#B89D5A"/>
           </linearGradient>
-          <linearGradient id="mManeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#C9A96A"/>
-            <stop offset="100%" stopColor="#E8D5A0"/>
-          </linearGradient>
-          <radialGradient id="mCheekGrad" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#FFB8C6"/>
-            <stop offset="100%" stopColor="#FF8FAA" stopOpacity="0.4"/>
+          <pattern id="mKnitTex" x="0" y="0" width="8" height="8" patternUnits="userSpaceOnUse">
+            <circle cx="4" cy="4" r="3.2" fill="none" stroke="#D6CCB4" strokeWidth=".5" opacity=".3"/>
+          </pattern>
+          <pattern id="mKnitTexH" x="0" y="0" width="7" height="7" patternUnits="userSpaceOnUse">
+            <circle cx="3.5" cy="3.5" r="2.8" fill="none" stroke="#D6CCB4" strokeWidth=".45" opacity=".25"/>
+          </pattern>
+          <radialGradient id="mHornSpk" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="white" stopOpacity=".7"/>
+            <stop offset="100%" stopColor="white" stopOpacity="0"/>
           </radialGradient>
-          <radialGradient id="mEarInner" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#FFDDE5"/>
-            <stop offset="100%" stopColor="#FFB8C6" stopOpacity="0.5"/>
-          </radialGradient>
-          <radialGradient id="mShirtGrad" cx="50%" cy="30%" r="65%">
-            <stop offset="0%" stopColor="#5C7CFA"/>
-            <stop offset="100%" stopColor="#3B5BDB"/>
-          </radialGradient>
-          <linearGradient id="mLogoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#FFD97D"/>
-            <stop offset="50%" stopColor="#C9A96A"/>
-            <stop offset="100%" stopColor="#E8C55A"/>
-          </linearGradient>
         </defs>
 
         {/* Body */}
-        <ellipse cx="130" cy="190" rx="90" ry="95" fill="url(#mBodyGrad)"/>
+        <ellipse cx="140" cy="200" rx="82" ry="85" fill="url(#mKnitGrad)"/>
+        <ellipse cx="140" cy="200" rx="82" ry="85" fill="url(#mKnitTex)"/>
 
-        {/* T-shirt */}
-        <path d="M52 155 Q55 130 90 125 Q110 140 130 140 Q150 140 170 125 Q205 130 208 155 L210 230 Q210 250 190 255 L70 255 Q50 250 50 230 Z" fill="url(#mShirtGrad)"/>
-        <path d="M90 125 Q110 142 130 142 Q150 142 170 125" stroke="#4A6CF7" strokeWidth="2" fill="none"/>
-        <path d="M65 240 Q130 235 195 240" stroke="#4A6CF7" strokeWidth="1" fill="none" strokeDasharray="4 3" opacity=".4"/>
+        {/* Legs */}
+        <ellipse cx="100" cy="278" rx="34" ry="20" fill="url(#mKnitGrad)"/>
+        <ellipse cx="100" cy="278" rx="34" ry="20" fill="url(#mKnitTex)"/>
+        <ellipse cx="180" cy="278" rx="34" ry="20" fill="url(#mKnitGrad)"/>
+        <ellipse cx="180" cy="278" rx="34" ry="20" fill="url(#mKnitTex)"/>
 
-        {/* Logo text */}
-        <text x="130" y="185" textAnchor="middle" fontFamily="Inter,system-ui,sans-serif" fontWeight="800" fontSize="16" fill="url(#mLogoGrad)">Upscale AI</text>
-        <line x1="95" y1="190" x2="165" y2="190" stroke="url(#mLogoGrad)" strokeWidth="1.5" opacity=".5"/>
+        {/* Dark navy t-shirt */}
+        <path d="M68 158 Q72 132 100 127 Q118 142 140 142 Q162 142 180 127 Q208 132 212 158 L214 238 Q214 255 196 258 L84 258 Q66 255 66 238 Z" fill="url(#mShirtGrad)"/>
+        <path d="M100 127 Q118 144 140 144 Q162 144 180 127" stroke="#0D1526" strokeWidth="1.5" fill="none"/>
+        <path d="M78 252 Q140 248 202 252" stroke="#0D1526" strokeWidth="1" fill="none" opacity=".4"/>
 
-        <path d="M130 145 L130 165" stroke="#4A6CF7" strokeWidth="1" fill="none" strokeDasharray="3 3" opacity=".25"/>
+        {/* Logo */}
+        <rect x="96" y="178" width="18" height="14" rx="2" fill="none" stroke="url(#mLogoGold)" strokeWidth="1.3"/>
+        <text x="105" y="189" textAnchor="middle" fontFamily="Inter,system-ui,sans-serif" fontWeight="700" fontSize="8" fill="url(#mLogoGold)">UP</text>
+        <text x="122" y="189.5" fontFamily="Inter,system-ui,sans-serif" fontWeight="600" fontSize="11" fill="url(#mLogoGold)">upscale ai</text>
 
         {/* Head */}
-        <ellipse cx="130" cy="100" rx="72" ry="65" fill="url(#mHeadGrad)"/>
-        <ellipse cx="130" cy="100" rx="72" ry="65" fill="none" stroke="#D5D8E0" strokeWidth="1" opacity=".4"/>
+        <ellipse cx="140" cy="98" rx="68" ry="62" fill="url(#mKnitHead)"/>
+        <ellipse cx="140" cy="98" rx="68" ry="62" fill="url(#mKnitTexH)"/>
+        <ellipse cx="140" cy="135" rx="40" ry="10" fill="#D2C8B2" opacity=".2"/>
 
         {/* Ears */}
-        <ellipse cx="72" cy="55" rx="22" ry="30" fill="#F0F1F5" transform="rotate(-15 72 55)"/>
-        <ellipse cx="72" cy="58" rx="12" ry="18" fill="url(#mEarInner)" transform="rotate(-15 72 58)" opacity=".6"/>
-        <ellipse cx="188" cy="55" rx="22" ry="30" fill="#F0F1F5" transform="rotate(15 188 55)"/>
-        <ellipse cx="188" cy="58" rx="12" ry="18" fill="url(#mEarInner)" transform="rotate(15 188 58)" opacity=".6"/>
+        <path d="M82 62 Q68 28 78 20 Q88 28 95 55 Z" fill="url(#mKnitGrad)"/>
+        <path d="M85 55 Q74 32 80 26 Q87 32 92 50 Z" fill="#E8DFC8" opacity=".5"/>
+        <path d="M198 62 Q212 28 202 20 Q192 28 185 55 Z" fill="url(#mKnitGrad)"/>
+        <path d="M195 55 Q206 32 200 26 Q193 32 188 50 Z" fill="#E8DFC8" opacity=".5"/>
 
-        {/* Horn */}
-        <path d="M130 8 L116 55 Q130 47 144 55 Z" fill="url(#mHornGrad)"/>
-        <path d="M123 40 Q130 35 137 40" stroke="#B5955A" strokeWidth="1.2" fill="none" opacity=".5"/>
-        <path d="M121 30 Q130 25 139 30" stroke="#B5955A" strokeWidth="1.2" fill="none" opacity=".5"/>
-        <path d="M125 19 Q130 15 135 19" stroke="#B5955A" strokeWidth="1.2" fill="none" opacity=".5"/>
-        <circle cx="128" cy="18" r="2.5" fill="#FFF5D4" opacity=".9"/>
+        {/* Silver horn */}
+        <path d="M140 5 L128 52 Q140 46 152 52 Z" fill="url(#mHornGrad)"/>
+        <circle cx="136" cy="18" r="2" fill="url(#mHornSpk)"/>
+        <circle cx="142" cy="28" r="1.5" fill="url(#mHornSpk)"/>
+        <circle cx="135" cy="36" r="1.8" fill="url(#mHornSpk)"/>
+        <circle cx="144" cy="14" r="1.2" fill="url(#mHornSpk)"/>
+        <path d="M133 40 Q140 36 147 40" stroke="#A8A8B6" strokeWidth=".8" fill="none" opacity=".4"/>
+        <path d="M134 32 Q140 28 146 32" stroke="#A8A8B6" strokeWidth=".8" fill="none" opacity=".4"/>
+        <path d="M136 24 Q140 20 144 24" stroke="#A8A8B6" strokeWidth=".8" fill="none" opacity=".4"/>
 
-        {/* Mane */}
-        <path d="M90 38 Q72 58 80 88 Q87 70 95 60 Q84 52 90 38Z" fill="url(#mManeGrad)" opacity=".9"/>
-        <path d="M80 55 Q62 78 72 108 Q80 90 88 80 Q78 70 80 55Z" fill="url(#mManeGrad)" opacity=".7"/>
-        <path d="M72 78 Q56 100 68 128 Q76 110 84 100 Q74 90 72 78Z" fill="url(#mManeGrad)" opacity=".5"/>
+        {/* Bead eyes */}
+        <circle cx="118" cy="95" r="5" fill="#1a1a1a"/>
+        <circle cx="162" cy="95" r="5" fill="#1a1a1a"/>
+        <circle cx="120" cy="93" r="1.5" fill="white" opacity=".6"/>
+        <circle cx="164" cy="93" r="1.5" fill="white" opacity=".6"/>
 
-        {/* Eyes */}
-        <ellipse cx="108" cy="95" rx="12" ry="14" fill="#1a1a2e"/>
-        <ellipse cx="152" cy="95" rx="12" ry="14" fill="#1a1a2e"/>
-        <circle cx="113" cy="89" r="5" fill="white" opacity=".9"/>
-        <circle cx="157" cy="89" r="5" fill="white" opacity=".9"/>
-        <circle cx="105" cy="97" r="2.5" fill="white" opacity=".5"/>
-        <circle cx="149" cy="97" r="2.5" fill="white" opacity=".5"/>
+        {/* Nose */}
+        <ellipse cx="140" cy="106" rx="5" ry="3" fill="#DDD4BE" opacity=".5"/>
 
-        {/* Smile + nose */}
-        <path d="M118 113 Q130 124 142 113" stroke="#555" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
-        <ellipse cx="130" cy="106" rx="3" ry="2" fill="#D5D8E0"/>
-
-        {/* Blush */}
-        <ellipse cx="86" cy="108" rx="12" ry="7" fill="url(#mCheekGrad)" opacity=".45"/>
-        <ellipse cx="174" cy="108" rx="12" ry="7" fill="url(#mCheekGrad)" opacity=".45"/>
-
-        {/* Left arm (static) */}
-        <ellipse cx="42" cy="178" rx="20" ry="30" fill="#F0F1F5" transform="rotate(22 42 178)"/>
-        <path d="M55 155 Q48 162 42 158" stroke="#4A6CF7" strokeWidth="2" fill="none" opacity=".6"/>
+        {/* Left arm */}
+        <ellipse cx="58" cy="190" rx="24" ry="35" fill="url(#mKnitGrad)" transform="rotate(25 58 190)"/>
+        <ellipse cx="58" cy="190" rx="24" ry="35" fill="url(#mKnitTex)" transform="rotate(25 58 190)"/>
+        <path d="M70 158 Q60 168 55 162" stroke="#0D1526" strokeWidth="1.5" fill="none" opacity=".5"/>
 
         {/* Right arm (waving) */}
         <g>
-          <ellipse cx="218" cy="178" rx="20" ry="30" fill="#F0F1F5" transform="rotate(-22 218 178)">
+          <ellipse cx="222" cy="190" rx="24" ry="35" fill="url(#mKnitGrad)" transform="rotate(-25 222 190)">
             <animateTransform
               attributeName="transform" type="rotate"
-              values="-22 218 178;-55 210 160;-22 218 178;-60 208 158;-22 218 178"
+              values="-25 222 190;-60 212 168;-25 222 190;-65 210 165;-25 222 190"
               dur="1.6s" repeatCount="indefinite"
               keyTimes="0;0.2;0.5;0.7;1"
               calcMode="spline"
               keySplines="0.42 0 0.58 1;0.42 0 0.58 1;0.42 0 0.58 1;0.42 0 0.58 1"
             />
           </ellipse>
-          <path d="M205 155 Q212 162 218 158" stroke="#4A6CF7" strokeWidth="2" fill="none" opacity=".6"/>
+          <ellipse cx="222" cy="190" rx="24" ry="35" fill="url(#mKnitTex)" transform="rotate(-25 222 190)">
+            <animateTransform
+              attributeName="transform" type="rotate"
+              values="-25 222 190;-60 212 168;-25 222 190;-65 210 165;-25 222 190"
+              dur="1.6s" repeatCount="indefinite"
+              keyTimes="0;0.2;0.5;0.7;1"
+              calcMode="spline"
+              keySplines="0.42 0 0.58 1;0.42 0 0.58 1;0.42 0 0.58 1;0.42 0 0.58 1"
+            />
+          </ellipse>
+          <path d="M210 158 Q220 168 225 162" stroke="#0D1526" strokeWidth="1.5" fill="none" opacity=".5"/>
         </g>
-
-        {/* Legs */}
-        <ellipse cx="95" cy="282" rx="30" ry="18" fill="#F0F1F5"/>
-        <ellipse cx="165" cy="282" rx="30" ry="18" fill="#F0F1F5"/>
-        <ellipse cx="95" cy="287" rx="20" ry="9" fill="#C9A96A" opacity=".65"/>
-        <ellipse cx="165" cy="287" rx="20" ry="9" fill="#C9A96A" opacity=".65"/>
-
-        {/* Tail */}
-        <path d="M220 215 Q248 198 242 168 Q238 185 228 190 Q246 172 242 152" stroke="url(#mManeGrad)" strokeWidth="7" fill="none" strokeLinecap="round" opacity=".8"/>
-        <path d="M242 152 Q238 140 244 130" stroke="url(#mManeGrad)" strokeWidth="4.5" fill="none" strokeLinecap="round" opacity=".6"/>
       </svg>
     </div>
   )
