@@ -2,14 +2,14 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build a self-hosted engineering dashboard that ingests code coverage (lcov/gcovr) and test results (Allure TestOps) from CI pipelines, stores them in PostgreSQL, and displays them in a React frontend with topology-split panels, line-level drill-down, and 7-day trend charts.
+**Goal:** Build a self-hosted engineering dashboard that ingests code coverage (gcov HTML, lcov, gcovr) and test results (GTest + pytest JUnit XML) from CI pipelines, stores them in PostgreSQL, and displays them in a React frontend with topology-split panels, line-level drill-down, and 7-day trend charts.
 
-**Architecture:** FastAPI backend with Celery + Redis for async ingestion; plugin registry pattern for parsers (lcov, gcovr) and connectors (Allure, GitHub, Jenkins); PostgreSQL with Alembic migrations. React 18 + Tailwind + Chart.js frontend. Everything runs via docker-compose locally and in CI.
+**Architecture:** FastAPI backend with Celery + Redis for async ingestion; plugin registry pattern for parsers (gcov_html, lcov, gcovr, junit_xml) and connectors (github, jenkins); PostgreSQL with Alembic migrations. React 18 + Tailwind + Chart.js frontend. No external services required — everything parsed from raw artifacts.
 
-**Tech Stack:** Python 3.11, FastAPI, SQLAlchemy 2.0, Alembic, Celery 5, Redis, PostgreSQL 15, pytest, httpx, React 18, Vite, Tailwind CSS 3, Chart.js 4, docker-compose
+**Tech Stack:** Python 3.11, FastAPI, SQLAlchemy 2.0, Alembic, Celery 5, Redis, PostgreSQL 15, pytest, BeautifulSoup4, React 18, Vite, Tailwind CSS 3, Chart.js 4, docker-compose
 
 **Phase 1 checkpoint:** Tasks 1–11 produce a fully deployable coverage dashboard.
-**Phase 2 checkpoint:** Tasks 12–20 add Allure test results on top.
+**Phase 2 checkpoint:** Tasks 12–16 add GTest/pytest test results on top.
 
 ---
 
@@ -39,13 +39,13 @@ engdash/                                 ← new standalone project (sibling to 
       plugins/
         registry.py                      ← Parser + connector registry
         parsers/
-          base.py                        ← Abstract CoverageParser interface
-          lcov.py                        ← lcov .info parser
-          gcovr.py                       ← gcovr coverage.xml parser
-          coverage_xml.py                ← pytest coverage.xml parser
+          base.py                        ← Abstract CoverageParser + TestParser interfaces
+          gcov_html.py                   ← PRIMARY: parse genhtml HTML output (BeautifulSoup4)
+          lcov.py                        ← lcov .info files
+          gcovr.py                       ← gcovr coverage.xml
+          junit_xml.py                   ← GTest + pytest JUnit XML (same schema, one parser)
         connectors/
           base.py                        ← Abstract Connector interface
-          allure.py                      ← Allure TestOps REST API connector
           github.py                      ← GitHub API connector
       workers/
         celery_app.py                    ← Celery app + broker config
@@ -689,145 +689,256 @@ git commit -m "feat: add plugin registry and parser base interface"
 
 ---
 
-## Task 6: lcov Parser
+## Task 6: gcov HTML Parser (PRIMARY)
+
+The team generates gcov HTML reports via genhtml or gcovr --html. This is the primary coverage format.
 
 **Files:**
-- Modify: `backend/app/plugins/parsers/lcov.py`
-- Create: `backend/tests/test_lcov_parser.py`
-- Create: `backend/tests/fixtures/sample.info`
+- Create: `backend/app/plugins/parsers/gcov_html.py`
+- Create: `backend/tests/test_gcov_html_parser.py`
+- Create: `backend/tests/fixtures/gcov_sample.html`
 
-- [ ] **Step 1: Create fixture file `tests/fixtures/sample.info`**
+- [ ] **Step 1: Install BeautifulSoup4**
 
+Add to `requirements.txt`:
 ```
-TN:
-SF:src/network/packet_handler.cpp
-DA:1,-1
-DA:42,3
-DA:43,2
-DA:44,0
-DA:45,0
-DA:47,1
-LH:3
-LF:5
-end_of_record
-SF:src/mgmt/vlan_control.cpp
-DA:10,1
-DA:11,1
-DA:12,0
-LH:2
-LF:3
-end_of_record
+beautifulsoup4==4.12.3
+lxml==5.2.1
+```
+Run: `pip install beautifulsoup4 lxml`
+
+- [ ] **Step 2: Create fixture `tests/fixtures/gcov_sample.html`**
+
+```html
+<!DOCTYPE html>
+<html class="theme-green">
+<head><title>src/network/packet_handler.cpp - GCC Code Coverage Report</title></head>
+<body>
+  <div class="Layout-main">
+    <header>
+      <div id="summary" class="summary">
+        <div>
+          <table class="coverage">
+            <tr><th></th><th>Coverage</th><th>Exec / Excl / Total</th></tr>
+            <tr><th scope="row">Lines:</th><td class="coverage-medium">68.0%</td><td class="coverage-medium">34 / 0 / 50</td></tr>
+            <tr><th scope="row">Functions:</th><td class="coverage-high">90.0%</td><td class="coverage-high">9 / 0 / 10</td></tr>
+            <tr><th scope="row">Branches:</th><td class="coverage-low">40.0%</td><td class="coverage-low">4 / 0 / 10</td></tr>
+          </table>
+        </div>
+      </div>
+    </header>
+    <main>
+      <div class="Box m-3 file-source">
+        <div class="Box-header d-flex flex-space-between sticky">
+          sched/src/iSLIP_sched_top.h
+        </div>
+        <div class="source-table-container">
+          <table class="text-mono text-small">
+            <tr class="source-line">
+              <td class="lineno"><a id="l1" href="#l1">1</a></td>
+              <td class="linebranch"></td>
+              <td class="linecount"></td>
+              <td class="src"><span>#ifndef HEADER_H</span></td>
+            </tr>
+            <tr class="source-line coveredLine">
+              <td class="lineno"><a id="l42" href="#l42">42</a></td>
+              <td class="linebranch"></td>
+              <td class="linecount">3</td>
+              <td class="src"><span>if (packet.valid()) {</span></td>
+            </tr>
+            <tr class="source-line coveredLine">
+              <td class="lineno"><a id="l43" href="#l43">43</a></td>
+              <td class="linebranch"></td>
+              <td class="linecount">2</td>
+              <td class="src"><span>process(packet);</span></td>
+            </tr>
+            <tr class="source-line uncoveredLine">
+              <td class="lineno"><a id="l44" href="#l44">44</a></td>
+              <td class="linebranch"></td>
+              <td class="linecount">0</td>
+              <td class="src"><span>handle_error(packet);</span></td>
+            </tr>
+            <tr class="source-line uncoveredLine">
+              <td class="lineno"><a id="l45" href="#l45">45</a></td>
+              <td class="linebranch"></td>
+              <td class="linecount">0</td>
+              <td class="src"><span>log_drop(packet.id);</span></td>
+            </tr>
+            <tr class="source-line coveredLine">
+              <td class="lineno"><a id="l47" href="#l47">47</a></td>
+              <td class="linebranch"></td>
+              <td class="linecount">1</td>
+              <td class="src"><span>return 0;</span></td>
+            </tr>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
+</html>
 ```
 
-- [ ] **Step 2: Write the failing test**
+- [ ] **Step 3: Write the failing test**
 
 ```python
-# tests/test_lcov_parser.py
+# tests/test_gcov_html_parser.py
 import pytest
 from pathlib import Path
-from app.plugins.parsers.lcov import LcovParser
+from app.plugins.parsers.gcov_html import GcovHtmlParser
 
-FIXTURE = Path(__file__).parent / "fixtures" / "sample.info"
+FIXTURE = Path(__file__).parent / "fixtures" / "gcov_sample.html"
 
 @pytest.fixture
 def parser():
-    return LcovParser()
+    return GcovHtmlParser()
 
 @pytest.fixture
 def content():
     return FIXTURE.read_bytes()
 
-def test_parses_total_line_counts(parser, content):
+def test_parses_line_coverage_from_summary(parser, content):
     result = parser.parse(content)
-    assert result.total_lines == 8   # LF:5 + LF:3
-    assert result.covered_lines == 5  # LH:3 + LH:2
+    assert result.total_lines == 50
+    assert result.covered_lines == 34
 
-def test_parses_pct(parser, content):
+def test_parses_pct_from_summary(parser, content):
     result = parser.parse(content)
-    assert abs(result.pct - 62.5) < 0.1
+    assert abs(result.pct - 68.0) < 0.1
 
-def test_parses_files(parser, content):
+def test_parses_file_path_from_header(parser, content):
     result = parser.parse(content)
-    assert len(result.files) == 2
-    assert result.files[0].file_path == "src/network/packet_handler.cpp"
+    assert len(result.files) == 1
+    assert result.files[0].file_path == "sched/src/iSLIP_sched_top.h"
 
-def test_marks_missed_lines(parser, content):
+def test_covered_lines_have_positive_hit_count(parser, content):
     result = parser.parse(content)
-    packet_file = result.files[0]
-    missed = [l for l in packet_file.lines if l.hit_count == 0]
-    assert len(missed) == 2   # DA:44,0 and DA:45,0
+    f = result.files[0]
+    covered = [l for l in f.lines if l.hit_count > 0]
+    assert len(covered) == 3   # lines 42, 43, 47
 
-def test_marks_not_executable_lines(parser, content):
+def test_uncovered_lines_have_zero_hit_count(parser, content):
     result = parser.parse(content)
-    packet_file = result.files[0]
-    not_exec = [l for l in packet_file.lines if l.hit_count == -1]
-    assert len(not_exec) == 1  # DA:1,-1
+    f = result.files[0]
+    missed = [l for l in f.lines if l.hit_count == 0]
+    assert len(missed) == 2    # lines 44, 45
+
+def test_non_executable_lines_have_minus_one(parser, content):
+    result = parser.parse(content)
+    f = result.files[0]
+    not_exec = [l for l in f.lines if l.hit_count == -1]
+    assert len(not_exec) == 1  # line 1 (no linecount text, no coveredLine/uncoveredLine class)
 ```
 
-- [ ] **Step 3: Run to verify failure**
+- [ ] **Step 4: Run to verify failure**
 
 ```bash
-pytest tests/test_lcov_parser.py -v
+pytest tests/test_gcov_html_parser.py -v
 ```
 
-Expected: `5 FAILED — NotImplementedError`
+Expected: `6 FAILED — cannot import name 'GcovHtmlParser'`
 
-- [ ] **Step 4: Implement `app/plugins/parsers/lcov.py`**
+- [ ] **Step 5: Implement `app/plugins/parsers/gcov_html.py`**
 
 ```python
+import re
+from bs4 import BeautifulSoup
 from app.plugins.parsers.base import CoverageParser, ParsedCoverage, ParsedFile, ParsedLine
 
-class LcovParser(CoverageParser):
+class GcovHtmlParser(CoverageParser):
     def parse(self, content: bytes) -> ParsedCoverage:
-        files: list[ParsedFile] = []
-        current_file: str | None = None
-        current_lines: list[ParsedLine] = []
-        current_lf = current_lh = 0
+        soup = BeautifulSoup(content, "lxml")
 
-        for raw in content.decode("utf-8", errors="replace").splitlines():
-            line = raw.strip()
-            if line.startswith("SF:"):
-                current_file = line[3:]
-                current_lines = []
-                current_lf = current_lh = 0
-            elif line.startswith("DA:"):
-                parts = line[3:].split(",")
-                lineno, hits = int(parts[0]), int(parts[1])
-                current_lines.append(ParsedLine(line_number=lineno, hit_count=hits))
-            elif line.startswith("LF:"):
-                current_lf = int(line[3:])
-            elif line.startswith("LH:"):
-                current_lh = int(line[3:])
-            elif line == "end_of_record" and current_file:
-                pct = (current_lh / current_lf * 100) if current_lf else 0.0
-                files.append(ParsedFile(
-                    file_path=current_file,
-                    total_lines=current_lf,
-                    covered_lines=current_lh,
-                    pct=round(pct, 2),
-                    lines=current_lines,
-                ))
-                current_file = None
+        # --- Summary: Lines row gives Exec / Excl / Total ---
+        total_lines = covered_lines = 0
+        pct = 0.0
+        for row in soup.select("table.coverage tr"):
+            th = row.find("th", scope="row")
+            if th and th.get_text(strip=True) == "Lines:":
+                cells = row.find_all("td")
+                if len(cells) >= 2:
+                    # pct cell e.g. "68.0%"
+                    pct_text = cells[0].get_text(strip=True).replace("%", "")
+                    pct = float(pct_text) if pct_text else 0.0
+                    # exec/excl/total cell e.g. "34 / 0 / 50"
+                    counts = re.findall(r"\d+", cells[1].get_text())
+                    if len(counts) >= 3:
+                        covered_lines, _, total_lines = int(counts[0]), int(counts[1]), int(counts[2])
+                break
 
-        total = sum(f.total_lines for f in files)
-        covered = sum(f.covered_lines for f in files)
-        pct = (covered / total * 100) if total else 0.0
-        return ParsedCoverage(total_lines=total, covered_lines=covered, pct=round(pct, 2), files=files)
+        # --- File path from sticky header ---
+        header = soup.select_one("div.Box-header.d-flex.flex-space-between.sticky")
+        file_path = header.get_text(strip=True).split()[0] if header else "unknown"
+
+        # --- Per-line data ---
+        parsed_lines: list[ParsedLine] = []
+        for tr in soup.select("tr.source-line"):
+            lineno_tag = tr.select_one("td.lineno a")
+            if not lineno_tag:
+                continue
+            lineno = int(lineno_tag.get_text(strip=True))
+            classes = tr.get("class", [])
+            linecount_td = tr.select_one("td.linecount")
+            count_text = linecount_td.get_text(strip=True) if linecount_td else ""
+
+            if "coveredLine" in classes:
+                hit = int(count_text) if count_text.isdigit() else 1
+            elif "uncoveredLine" in classes:
+                hit = 0
+            elif "partialCoveredLine" in classes:
+                hit = int(count_text) if count_text.isdigit() else 1
+            else:
+                hit = -1  # not executable
+
+            parsed_lines.append(ParsedLine(line_number=lineno, hit_count=hit))
+
+        file_covered = sum(1 for l in parsed_lines if l.hit_count > 0)
+        file_total = sum(1 for l in parsed_lines if l.hit_count >= 0)
+
+        parsed_file = ParsedFile(
+            file_path=file_path,
+            total_lines=file_total or total_lines,
+            covered_lines=file_covered or covered_lines,
+            pct=pct,
+            lines=parsed_lines,
+        )
+
+        return ParsedCoverage(
+            total_lines=total_lines,
+            covered_lines=covered_lines,
+            pct=pct,
+            files=[parsed_file],
+        )
 ```
 
-- [ ] **Step 5: Run tests to verify pass**
+- [ ] **Step 6: Run tests to verify pass**
 
 ```bash
-pytest tests/test_lcov_parser.py -v
+pytest tests/test_gcov_html_parser.py -v
 ```
 
-Expected: `5 passed`
+Expected: `6 passed`
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 7: Register gcov_html in the plugin registry**
+
+In `app/plugins/registry.py`, update `_register_defaults`:
+
+```python
+def _register_defaults(self):
+    from app.plugins.parsers.gcov_html import GcovHtmlParser
+    from app.plugins.parsers.lcov import LcovParser
+    from app.plugins.parsers.gcovr import GcovrParser
+    self._parsers["gcov_html"] = GcovHtmlParser()
+    self._parsers["lcov"] = LcovParser()
+    self._parsers["gcovr"] = GcovrParser()
+    self._parsers["coverage_xml"] = GcovrParser()
+```
+
+- [ ] **Step 8: Commit**
 
 ```bash
-git add app/plugins/parsers/lcov.py tests/test_lcov_parser.py tests/fixtures/
-git commit -m "feat: implement lcov parser with TDD"
+git add app/plugins/parsers/gcov_html.py tests/test_gcov_html_parser.py tests/fixtures/gcov_sample.html requirements.txt
+git commit -m "feat: implement gcov HTML parser (primary coverage format)"
 ```
 
 ---
@@ -1798,128 +1909,225 @@ git commit -m "feat: Phase 1 complete — Coverage frontend with exec bar, panel
 
 ## ── PHASE 2 BEGINS ──
 
-## Task 12: Allure TestOps Connector
+## Task 12: JUnit XML Parser (GTest + pytest)
+
+GTest emits JUnit XML via `--gtest_output=xml:result.xml`. pytest emits it via `pytest --junit-xml=result.xml`. Both share the same schema — one parser handles both.
 
 **Files:**
-- Create: `backend/app/plugins/connectors/allure.py`
-- Create: `backend/tests/test_allure_connector.py`
+- Create: `backend/app/plugins/parsers/junit_xml.py`
+- Create: `backend/tests/test_junit_xml_parser.py`
+- Create: `backend/tests/fixtures/gtest_result.xml`
+- Create: `backend/tests/fixtures/pytest_result.xml`
 
-- [ ] **Step 1: Write the failing test**
+- [ ] **Step 1: Create GTest fixture `tests/fixtures/gtest_result.xml`**
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="AllTests" tests="10" failures="2" errors="0" disabled="0" time="1.234">
+  <testsuite name="PacketHandlerTest" tests="6" failures="1" errors="0" disabled="0" time="0.800">
+    <testcase name="ValidPacketProcessed" classname="PacketHandlerTest" time="0.100" status="run"/>
+    <testcase name="InvalidPacketRejected" classname="PacketHandlerTest" time="0.200" status="run"/>
+    <testcase name="BufferOverflowHandled" classname="PacketHandlerTest" time="0.150" status="run">
+      <failure message="Expected: result == 0&#xA;Actual: result == -1" type="AssertionError"/>
+    </testcase>
+    <testcase name="NullPacketSafe" classname="PacketHandlerTest" time="0.100" status="run"/>
+    <testcase name="LargePacketTruncated" classname="PacketHandlerTest" time="0.125" status="run"/>
+    <testcase name="ConcurrentAccess" classname="PacketHandlerTest" time="0.125" status="run"/>
+  </testsuite>
+  <testsuite name="VlanControlTest" tests="4" failures="1" errors="0" disabled="0" time="0.434">
+    <testcase name="VlanCreation" classname="VlanControlTest" time="0.100" status="run"/>
+    <testcase name="VlanDeletion" classname="VlanControlTest" time="0.100" status="run"/>
+    <testcase name="VlanTagging" classname="VlanControlTest" time="0.134" status="run">
+      <failure message="Tag mismatch" type="AssertionError"/>
+    </testcase>
+    <testcase name="VlanMembership" classname="VlanControlTest" time="0.100" status="run"/>
+  </testsuite>
+</testsuites>
+```
+
+- [ ] **Step 2: Create pytest fixture `tests/fixtures/pytest_result.xml`**
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+  <testsuite name="mgmt" tests="5" errors="0" failures="1" skipped="1" time="2.345">
+    <testcase classname="test_mgmt.TestVlan" name="test_create_vlan" time="0.500"/>
+    <testcase classname="test_mgmt.TestVlan" name="test_delete_vlan" time="0.400"/>
+    <testcase classname="test_mgmt.TestVlan" name="test_tag_vlan" time="0.600">
+      <failure message="AssertionError: tag mismatch">AssertionError: tag mismatch</failure>
+    </testcase>
+    <testcase classname="test_mgmt.TestVlan" name="test_vlan_membership" time="0.345"/>
+    <testcase classname="test_mgmt.TestVlan" name="test_vlan_isolation" time="0.000">
+      <skipped message="not implemented yet"/>
+    </testcase>
+  </testsuite>
+</testsuites>
+```
+
+- [ ] **Step 3: Write the failing test**
 
 ```python
-# tests/test_allure_connector.py
+# tests/test_junit_xml_parser.py
 import pytest
-from unittest.mock import patch, MagicMock
-from app.plugins.connectors.allure import AllureConnector
+from pathlib import Path
+from app.plugins.parsers.junit_xml import JUnitXmlParser
 
-MOCK_LAUNCHES = [
-    {
-        "id": "101",
-        "name": "Nightly T0",
-        "status": "PASSED",
-        "createdDate": "2026-04-23T02:00:00Z",
-        "statistic": {"passed": 1699, "failed": 44, "broken": 26, "skipped": 8, "total": 1777},
-        "tags": [{"name": "topology:T0"}, {"name": "suite:All"}],
-    }
-]
+GTEST = Path(__file__).parent / "fixtures" / "gtest_result.xml"
+PYTEST = Path(__file__).parent / "fixtures" / "pytest_result.xml"
 
-MOCK_SUITE_LAUNCHES = [
-    {
-        "id": "102",
-        "name": "Nightly T0 mgmt",
-        "createdDate": "2026-04-23T02:00:00Z",
-        "statistic": {"passed": 420, "failed": 14, "broken": 8, "skipped": 3, "total": 445},
-        "tags": [{"name": "topology:T0"}, {"name": "suite:mgmt"}],
-    }
-]
+@pytest.fixture
+def parser():
+    return JUnitXmlParser()
 
-@patch("app.plugins.connectors.allure.httpx.get")
-def test_fetch_launches_returns_list(mock_get):
-    mock_get.return_value = MagicMock(status_code=200, json=lambda: {"content": MOCK_LAUNCHES})
-    connector = AllureConnector(base_url="http://monitoring:8081", token="test")
-    launches = connector.fetch_recent_launches(days=1)
-    assert len(launches) == 1
-    assert launches[0]["id"] == "101"
+def test_gtest_total_and_failures(parser):
+    result = parser.parse(GTEST.read_bytes())
+    assert result.total == 10
+    assert result.failed == 2
+    assert result.passed == 8
 
-@patch("app.plugins.connectors.allure.httpx.get")
-def test_parse_launch_extracts_topology_and_suite(mock_get):
-    mock_get.return_value = MagicMock(status_code=200, json=lambda: {"content": MOCK_LAUNCHES})
-    connector = AllureConnector(base_url="http://monitoring:8081", token="test")
-    launches = connector.fetch_recent_launches(days=1)
-    parsed = connector.parse_launch(launches[0])
-    assert parsed["topology"] == "T0"
-    assert parsed["suite"] == "All"
-    assert parsed["passed"] == 1699
-    assert parsed["pass_rate"] == pytest.approx(95.6, abs=0.1)
+def test_gtest_pass_rate(parser):
+    result = parser.parse(GTEST.read_bytes())
+    assert abs(result.pass_rate - 80.0) < 0.1
+
+def test_gtest_suite_breakdown(parser):
+    result = parser.parse(GTEST.read_bytes())
+    packet = next(s for s in result.suites if s.name == "PacketHandlerTest")
+    assert packet.failed == 1
+    assert packet.passed == 5
+
+def test_pytest_skipped_counted(parser):
+    result = parser.parse(PYTEST.read_bytes())
+    assert result.skipped == 1
+    assert result.total == 5
+
+def test_pytest_suite_name_extracted(parser):
+    result = parser.parse(PYTEST.read_bytes())
+    assert result.suites[0].name == "mgmt"
 ```
 
-- [ ] **Step 2: Run to verify failure**
+- [ ] **Step 4: Run to verify failure**
 
 ```bash
-pytest tests/test_allure_connector.py -v
+pytest tests/test_junit_xml_parser.py -v
 ```
 
-Expected: `FAILED — cannot import name 'AllureConnector'`
+Expected: `5 FAILED — cannot import name 'JUnitXmlParser'`
 
-- [ ] **Step 3: Implement `app/plugins/connectors/allure.py`**
+- [ ] **Step 5: Add test result base types to `app/plugins/parsers/base.py`**
+
+Append to existing `base.py`:
 
 ```python
-import httpx
-from datetime import datetime, timedelta, timezone
+@dataclass
+class ParsedSuite:
+    name: str
+    total: int
+    passed: int
+    failed: int
+    skipped: int
+    errors: int = 0
 
-class AllureConnector:
-    def __init__(self, base_url: str, token: str):
-        self.base_url = base_url.rstrip("/")
-        self.headers = {"Authorization": f"Bearer {token}"} if token else {}
+@dataclass
+class ParsedTestResult:
+    total: int
+    passed: int
+    failed: int
+    skipped: int
+    errors: int
+    pass_rate: float
+    suites: list[ParsedSuite] = field(default_factory=list)
 
-    def fetch_recent_launches(self, days: int = 7) -> list[dict]:
-        since = datetime.now(timezone.utc) - timedelta(days=days)
-        since_ms = int(since.timestamp() * 1000)
-        url = f"{self.base_url}/api/rs/launch"
-        resp = httpx.get(url, headers=self.headers,
-                         params={"createdAfter": since_ms, "pageSize": 200})
-        resp.raise_for_status()
-        return resp.json().get("content", [])
+class TestResultParser(ABC):
+    @abstractmethod
+    def parse(self, content: bytes) -> ParsedTestResult:
+        """Parse JUnit XML bytes into normalized ParsedTestResult."""
+```
 
-    def parse_launch(self, launch: dict) -> dict:
-        tags = {t["name"].split(":")[0]: t["name"].split(":")[1]
-                for t in launch.get("tags", []) if ":" in t["name"]}
-        stat = launch.get("statistic", {})
-        total = stat.get("total", 0)
-        passed = stat.get("passed", 0)
+- [ ] **Step 6: Implement `app/plugins/parsers/junit_xml.py`**
+
+```python
+import xml.etree.ElementTree as ET
+from app.plugins.parsers.base import TestResultParser, ParsedTestResult, ParsedSuite
+
+class JUnitXmlParser(TestResultParser):
+    def parse(self, content: bytes) -> ParsedTestResult:
+        root = ET.fromstring(content)
+
+        # Handle both <testsuites> wrapper and bare <testsuite>
+        if root.tag == "testsuites":
+            suite_elements = root.findall("testsuite")
+        else:
+            suite_elements = [root]
+
+        suites: list[ParsedSuite] = []
+        for ts in suite_elements:
+            total = int(ts.get("tests", 0))
+            failed = int(ts.get("failures", 0))
+            errors = int(ts.get("errors", 0))
+            skipped = int(ts.get("skipped", 0))
+            passed = total - failed - errors - skipped
+            suites.append(ParsedSuite(
+                name=ts.get("name", "unknown"),
+                total=total,
+                passed=max(passed, 0),
+                failed=failed,
+                skipped=skipped,
+                errors=errors,
+            ))
+
+        total = sum(s.total for s in suites)
+        failed = sum(s.failed for s in suites)
+        errors = sum(s.errors for s in suites)
+        skipped = sum(s.skipped for s in suites)
+        passed = total - failed - errors - skipped
         pass_rate = (passed / total * 100) if total else 0.0
-        return {
-            "allure_launch_id": str(launch["id"]),
-            "topology": tags.get("topology"),
-            "suite": tags.get("suite", "All"),
-            "passed": passed,
-            "failed": stat.get("failed", 0),
-            "broken": stat.get("broken", 0),
-            "skipped": stat.get("skipped", 0),
-            "total": total,
-            "pass_rate": round(pass_rate, 2),
-            "created_at": launch.get("createdDate"),
-        }
+
+        return ParsedTestResult(
+            total=total,
+            passed=max(passed, 0),
+            failed=failed,
+            skipped=skipped,
+            errors=errors,
+            pass_rate=round(pass_rate, 2),
+            suites=suites,
+        )
 ```
 
-- [ ] **Step 4: Run tests to verify pass**
+- [ ] **Step 7: Run tests to verify pass**
 
 ```bash
-pytest tests/test_allure_connector.py -v
+pytest tests/test_junit_xml_parser.py -v
 ```
 
-Expected: `2 passed`
+Expected: `5 passed`
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 8: Register junit_xml in registry**
+
+In `app/plugins/registry.py`, add to `__init__`:
+
+```python
+self._test_parsers: dict[str, "TestResultParser"] = {}
+from app.plugins.parsers.junit_xml import JUnitXmlParser
+self._test_parsers["junit_xml"] = JUnitXmlParser()
+self._test_parsers["gtest"] = JUnitXmlParser()   # same schema
+self._test_parsers["pytest"] = JUnitXmlParser()  # same schema
+
+def get_test_parser(self, fmt: str) -> "TestResultParser":
+    if fmt not in self._test_parsers:
+        raise ValueError(f"No test parser for format: {fmt}")
+    return self._test_parsers[fmt]
+```
+
+- [ ] **Step 9: Commit**
 
 ```bash
-git add app/plugins/connectors/allure.py tests/test_allure_connector.py
-git commit -m "feat: Allure TestOps connector — fetch and parse launches"
+git add app/plugins/parsers/junit_xml.py app/plugins/parsers/base.py app/plugins/registry.py tests/test_junit_xml_parser.py tests/fixtures/
+git commit -m "feat: JUnit XML parser for GTest and pytest results"
 ```
 
 ---
 
-## Task 13: Allure Sync Celery Task + Test Results API
+## Task 13: Test Results Ingest + Celery Task + API
 
 **Files:**
 - Modify: `backend/app/workers/tasks.py`
@@ -1928,69 +2136,94 @@ git commit -m "feat: Allure TestOps connector — fetch and parse launches"
 - Modify: `backend/app/main.py`
 - Create: `backend/tests/test_test_results_router.py`
 
-- [ ] **Step 1: Add `sync_allure` task to `app/workers/tasks.py`**
+- [ ] **Step 1: Add `parse_test_result` Celery task to `app/workers/tasks.py`**
 
 Append to existing `tasks.py`:
 
 ```python
-@celery.task
-def sync_allure():
-    from app.plugins.connectors.allure import AllureConnector
-    from app.models import Run, EnvironmentEnum, CISystemEnum
-    from app.models.test_result import TestResult
+@celery.task(bind=True, max_retries=3)
+def parse_test_result(self, run_id: int, artifact_path: str, fmt: str, suite: str = "All"):
+    store = ArtifactStore(settings.artifact_store_path)
+    content = store.load(artifact_path)
 
-    connector = AllureConnector(
-        base_url=settings.allure_base_url,
-        token=settings.allure_token,
-    )
-    launches = connector.fetch_recent_launches(days=7)
+    try:
+        parser = registry.get_test_parser(fmt)
+        parsed = parser.parse(content)
+    except Exception as exc:
+        raise self.retry(exc=exc, countdown=30)
+
     db = SessionLocal()
     try:
-        for launch in launches:
-            parsed = connector.parse_launch(launch)
-            if not parsed.get("topology"):
-                continue
-            run = Run(
-                commit_sha="allure-sync",
-                branch="main",
-                environment=EnvironmentEnum.switch,
-                topology=parsed["topology"],
-                ci_system=CISystemEnum.manual,
-                status="complete",
-            )
-            db.add(run)
-            db.flush()
+        from app.models.test_result import TestResult
+        # One TestResult row per suite in the XML
+        for s in parsed.suites:
             tr = TestResult(
-                run_id=run.id,
-                suite=parsed["suite"],
-                passed=parsed["passed"],
-                failed=parsed["failed"],
-                broken=parsed["broken"],
-                skipped=parsed["skipped"],
-                total=parsed["total"],
-                pass_rate=parsed["pass_rate"],
-                source="allure",
-                allure_launch_id=parsed["allure_launch_id"],
+                run_id=run_id,
+                suite=s.name,
+                passed=s.passed,
+                failed=s.failed,
+                broken=s.errors,
+                skipped=s.skipped,
+                total=s.total,
+                pass_rate=round((s.passed / s.total * 100) if s.total else 0, 2),
+                source=fmt,
             )
             db.add(tr)
+        # Also write an "All" aggregate row
+        db.add(TestResult(
+            run_id=run_id,
+            suite=suite,
+            passed=parsed.passed,
+            failed=parsed.failed,
+            broken=parsed.errors,
+            skipped=parsed.skipped,
+            total=parsed.total,
+            pass_rate=parsed.pass_rate,
+            source=fmt,
+        ))
+        run = db.get(Run, run_id)
+        run.status = "complete"
         db.commit()
     finally:
         db.close()
 ```
 
-- [ ] **Step 2: Add Celery Beat schedule for nightly sync**
+- [ ] **Step 2: Wire test result ingest into `app/routers/ingest.py`**
 
-In `app/workers/celery_app.py`, append:
+Add a second endpoint for test results:
 
 ```python
-from celery.schedules import crontab
+@router.post("/ingest/test-results", status_code=202)
+async def ingest_test_results(
+    artifact: UploadFile = File(...),
+    format: str = Form(...),           # junit_xml, gtest, pytest
+    environment: str = Form(...),
+    topology: str = Form(default=""),
+    suite: str = Form(default="All"),
+    commit_sha: str = Form(...),
+    branch: str = Form(default=""),
+    ci_system: str = Form(default="manual"),
+    db: Session = Depends(get_db),
+    _: None = Depends(verify_api_key),
+):
+    run = Run(
+        commit_sha=commit_sha, branch=branch,
+        environment=EnvironmentEnum(environment),
+        topology=topology or None,
+        ci_system=CISystemEnum(ci_system),
+        status="pending",
+    )
+    db.add(run)
+    db.commit()
+    db.refresh(run)
 
-celery.conf.beat_schedule = {
-    "sync-allure-nightly": {
-        "task": "app.workers.tasks.sync_allure",
-        "schedule": crontab(hour=3, minute=0),  # 3am UTC daily
-    },
-}
+    content = await artifact.read()
+    store = ArtifactStore(settings.artifact_store_path)
+    path = store.save(content, run_id=run.id, filename=artifact.filename or "result.xml")
+
+    from app.workers.tasks import parse_test_result
+    parse_test_result.delay(run.id, path, format, suite)
+    return {"status": "queued", "run_id": run.id}
 ```
 
 - [ ] **Step 3: Write `app/schemas/test_result.py`**
