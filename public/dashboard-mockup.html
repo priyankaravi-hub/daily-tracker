@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Engineering Dashboard — Mockup</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', sans-serif; background: #0f1117; color: #e2e8f0; min-height: 100vh; }
+
+  nav { background: #1a1d27; border-bottom: 1px solid #2d3147; padding: 12px 24px; display: flex; align-items: center; gap: 16px; }
+  .logo { font-weight: 700; font-size: 16px; color: #7c6af7; }
+  .nav-tabs { display: flex; gap: 4px; margin-left: 24px; }
+  .nav-tab { padding: 6px 14px; border-radius: 6px; font-size: 13px; color: #94a3b8; cursor: pointer; }
+  .nav-tab.active { background: #2d3147; color: #e2e8f0; }
+  .badge { margin-left: auto; background: #2d3147; padding: 4px 12px; border-radius: 20px; font-size: 12px; color: #94a3b8; }
+
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ── TEST RESULTS ─────────────────────────────── */
+  .tr-header { padding: 18px 24px 0; display: flex; align-items: center; justify-content: space-between; }
+  .tr-title { font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+  .dot-live { width: 7px; height: 7px; border-radius: 50%; background: #34d399; display: inline-block; }
+  .tr-meta { font-size: 12px; color: #64748b; display: flex; align-items: center; gap: 6px; }
+
+  /* suite tabs (shared across both charts) */
+  .suite-tabs { display: flex; gap: 0; border-bottom: 1px solid #2d3147; padding: 12px 24px 0; }
+  .suite-tab { padding: 8px 18px; font-size: 13px; color: #64748b; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+  .suite-tab.active { color: #fbbf24; border-bottom-color: #fbbf24; }
+
+  /* stat cards */
+  .stats-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; padding: 20px 24px 0; }
+  .stat-card { background: #1a1d27; border: 1px solid #2d3147; border-radius: 10px; padding: 16px; }
+  .stat-label { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; }
+  .stat-val { font-size: 26px; font-weight: 700; }
+  .stat-sub { font-size: 12px; color: #64748b; margin-top: 2px; }
+
+  /* dual chart layout */
+  .dual-charts { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 20px 24px 24px; }
+  .chart-panel { background: #1a1d27; border: 1px solid #2d3147; border-radius: 12px; padding: 20px; }
+  .chart-panel-title { font-size: 13px; font-weight: 600; color: #e2e8f0; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+  .topo-pill { font-size: 11px; background: #2d3147; color: #7c6af7; padding: 2px 8px; border-radius: 10px; }
+  .chart-subtitle { font-size: 11px; color: #64748b; margin-bottom: 14px; }
+  .chart-wrap { position: relative; height: 300px; }
+  .chart-legend { display: flex; align-items: center; gap: 16px; margin-top: 12px; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #94a3b8; }
+  .legend-dot { width: 9px; height: 9px; border-radius: 2px; }
+  .legend-dash { width: 16px; border-top: 2px dashed #fff; }
+
+  /* ── COVERAGE PAGE ────────────────────────────── */
+  .exec-bar { background: #1e2235; border-bottom: 1px solid #2d3147; padding: 14px 24px; display: flex; align-items: center; gap: 32px; }
+  .exec-label { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; }
+  .exec-value { font-size: 28px; font-weight: 700; }
+  .divider { width: 1px; height: 40px; background: #2d3147; }
+  .mini-env { font-size: 11px; color: #64748b; }
+  .mini-val { font-size: 20px; font-weight: 600; }
+  .cov-grid { padding: 20px 24px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  .panel { background: #1a1d27; border: 1px solid #2d3147; border-radius: 12px; padding: 20px; }
+  .panel-hdr { display: flex; justify-content: space-between; margin-bottom: 16px; }
+  .panel-title { font-size: 13px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.8px; }
+  .panel-badge { font-size: 11px; background: #2d3147; color: #7c6af7; padding: 2px 8px; border-radius: 10px; }
+  .topo-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #2d3147; }
+  .topo-row:last-of-type { border-bottom: none; }
+  .topo-name { font-size: 13px; }
+  .topo-tag { font-size: 11px; color: #64748b; background: #0f1117; padding: 2px 6px; border-radius: 4px; margin-left: 5px; }
+  .pct-mid { font-size: 22px; font-weight: 700; color: #fbbf24; }
+  .pct-good { font-size: 22px; font-weight: 700; color: #34d399; }
+  .delta-up { font-size: 12px; color: #34d399; }
+  .delta-dn { font-size: 12px; color: #f87171; }
+  .spark { display: flex; align-items: flex-end; gap: 2px; height: 26px; }
+  .sb { width: 5px; background: #3b4263; border-radius: 2px; }
+  .sb.hi { background: #7c6af7; }
+  .prog { background: #0f1117; border-radius: 6px; height: 7px; overflow: hidden; margin-top: 10px; }
+  .prog-fill { height: 100%; border-radius: 6px; }
+  .uncov { margin-top: 14px; }
+  .uncov-row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #2d3147; }
+  .uncov-row:last-child { border-bottom: none; }
+  .uncov-file { font-size: 12px; color: #94a3b8; font-family: monospace; }
+  .uncov-pct { font-size: 12px; color: #f87171; font-weight: 600; }
+  .drilldown { margin: 0 24px 24px; background: #1a1d27; border: 1px solid #7c6af7; border-radius: 12px; padding: 20px; }
+  .drill-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .drill-path { font-size: 12px; color: #64748b; font-family: monospace; }
+  .drill-pct { font-size: 14px; font-weight: 600; color: #fbbf24; margin-left: auto; }
+  .code-view { background: #0f1117; border-radius: 8px; padding: 14px; font-family: monospace; font-size: 13px; line-height: 1.8; }
+  .cl { display: flex; gap: 10px; }
+  .ln { color: #3b4263; min-width: 24px; }
+  .cv { color: #34d399; } .mv { color: #f87171; } .nv { color: #3b4263; }
+  .cc { color: #e2e8f0; } .mc { color: #fca5a5; background: rgba(248,113,113,0.08); padding: 0 3px; border-radius: 3px; } .nc { color: #475569; }
+  .sec-label { padding: 12px 24px 0; font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 1px; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">⬡ EngDash</div>
+  <div class="nav-tabs">
+    <div class="nav-tab" onclick="showPage('coverage',this)">Code Coverage</div>
+    <div class="nav-tab active" onclick="showPage('testresults',this)">Test Results</div>
+    <div class="nav-tab" onclick="showPage('coverage',this)">Bug Tracking</div>
+    <div class="nav-tab" onclick="showPage('coverage',this)">Progress</div>
+  </div>
+  <div class="badge">main · a3f92c1 · synced from Allure · 3 min ago</div>
+</nav>
+
+<!-- ═══════════════════════════════════════════════════════ TEST RESULTS -->
+<div class="page active" id="page-testresults">
+
+  <div class="tr-header">
+    <div class="tr-title">✏ Nightly Test Results</div>
+    <div style="display:flex;align-items:center;gap:16px">
+      <div class="tr-meta"><span class="dot-live"></span> Synced from Allure TestOps</div>
+      <div style="font-size:12px;color:#64748b">Updated 02:56 PM</div>
+    </div>
+  </div>
+
+  <!-- suite tabs apply to BOTH charts -->
+  <div class="suite-tabs">
+    <div class="suite-tab active" onclick="setSuite(this,'All')">All</div>
+    <div class="suite-tab" onclick="setSuite(this,'base')">base</div>
+    <div class="suite-tab" onclick="setSuite(this,'l2')">l2</div>
+    <div class="suite-tab" onclick="setSuite(this,'l3')">l3</div>
+    <div class="suite-tab" onclick="setSuite(this,'mgmt')">mgmt</div>
+    <div class="suite-tab" onclick="setSuite(this,'qos')">qos</div>
+  </div>
+
+  <!-- stat cards (combined) -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-label">Avg Pass Rate (both)</div>
+      <div class="stat-val" style="color:#34d399">97.0%</div>
+      <div class="stat-sub">↑ 1.0% vs prior week</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Total Tests (7d)</div>
+      <div class="stat-val" style="color:#e2e8f0">22,624</div>
+      <div class="stat-sub">T0 + T1-lag combined</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Failed</div>
+      <div class="stat-val" style="color:#f87171">374</div>
+      <div class="stat-sub">↓ 41 from last week</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Broken / Infra</div>
+      <div class="stat-val" style="color:#fb923c">68</div>
+      <div class="stat-sub">not test failures</div>
+    </div>
+  </div>
+
+  <!-- DUAL CHARTS -->
+  <div class="dual-charts">
+
+    <!-- T0 -->
+    <div class="chart-panel">
+      <div class="chart-panel-title">
+        T0 Topology <span class="topo-pill">SONiC Mgmt</span>
+      </div>
+      <div class="chart-subtitle" id="t0-subtitle">All Suites · 7-day trend</div>
+      <div class="chart-wrap"><canvas id="chartT0"></canvas></div>
+      <div class="chart-legend">
+        <div class="legend-item"><div class="legend-dash"></div> Pass Rate</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#a855f7"></div> Skipped</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#fb923c"></div> Broken</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#f87171"></div> Failed</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#34d399"></div> Passed</div>
+      </div>
+    </div>
+
+    <!-- T1-lag -->
+    <div class="chart-panel">
+      <div class="chart-panel-title">
+        T1-LAG Topology <span class="topo-pill">SONiC Mgmt</span>
+      </div>
+      <div class="chart-subtitle" id="t1-subtitle">All Suites · 7-day trend</div>
+      <div class="chart-wrap"><canvas id="chartT1"></canvas></div>
+      <div class="chart-legend">
+        <div class="legend-item"><div class="legend-dash"></div> Pass Rate</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#a855f7"></div> Skipped</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#fb923c"></div> Broken</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#f87171"></div> Failed</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#34d399"></div> Passed</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ COVERAGE PAGE -->
+<div class="page" id="page-coverage">
+  <div class="exec-bar">
+    <div>
+      <div class="exec-label">Overall Coverage</div>
+      <div style="display:flex;align-items:baseline">
+        <div class="exec-value">74.2%</div>
+        <span style="color:#34d399;font-size:13px;margin-left:8px">↑ 2.1% this week</span>
+      </div>
+    </div>
+    <div class="divider"></div>
+    <div><div class="mini-env">Switches (avg)</div><div class="mini-val" style="color:#fbbf24">68.4%</div></div>
+    <div class="divider"></div>
+    <div><div class="mini-env">Simulator</div><div class="mini-val" style="color:#34d399">79.1%</div></div>
+    <div class="divider"></div>
+    <div><div class="mini-env">Emulator</div><div class="mini-val" style="color:#34d399">76.8%</div></div>
+  </div>
+  <div class="sec-label">Environments — last 14 builds</div>
+  <div class="cov-grid">
+    <div class="panel">
+      <div class="panel-hdr"><div class="panel-title">Switches</div><div class="panel-badge">2 topologies</div></div>
+      <div class="topo-row">
+        <div><span class="topo-name">T0 Topology</span><span class="topo-tag">SONiC Mgmt</span></div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="spark"><div class="sb" style="height:40%"></div><div class="sb" style="height:55%"></div><div class="sb" style="height:62%"></div><div class="sb hi" style="height:70%"></div></div>
+          <div><div class="pct-mid">68.1%</div><div class="delta-up">↑ 1.2%</div></div>
+        </div>
+      </div>
+      <div class="prog"><div class="prog-fill" style="width:68.1%;background:linear-gradient(90deg,#d97706,#fbbf24)"></div></div>
+      <div class="topo-row" style="margin-top:10px">
+        <div><span class="topo-name">T1-LAG Topology</span><span class="topo-tag">SONiC Mgmt</span></div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="spark"><div class="sb" style="height:55%"></div><div class="sb" style="height:65%"></div><div class="sb" style="height:70%"></div><div class="sb hi" style="height:72%"></div></div>
+          <div><div class="pct-mid">71.4%</div><div class="delta-dn">↓ 0.5%</div></div>
+        </div>
+      </div>
+      <div class="prog"><div class="prog-fill" style="width:71.4%;background:linear-gradient(90deg,#d97706,#fbbf24)"></div></div>
+      <div class="uncov">
+        <div style="font-size:11px;color:#64748b;margin-bottom:5px;text-transform:uppercase;letter-spacing:.8px">Top uncovered files</div>
+        <div class="uncov-row"><div class="uncov-file">src/network/packet_handler.cpp</div><div class="uncov-pct">34%</div></div>
+        <div class="uncov-row"><div class="uncov-file">src/mgmt/vlan_control.cpp</div><div class="uncov-pct">41%</div></div>
+        <div class="uncov-row"><div class="uncov-file">src/routing/bgp_table.cpp</div><div class="uncov-pct">52%</div></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-hdr"><div class="panel-title">Simulator</div><div class="panel-badge">CI · Jenkins</div></div>
+      <div style="font-size:42px;font-weight:800;color:#34d399">79.1%</div>
+      <div style="font-size:13px;color:#64748b;margin-bottom:14px">↓ 0.5% from last build</div>
+      <div class="prog"><div class="prog-fill" style="width:79.1%;background:linear-gradient(90deg,#059669,#34d399)"></div></div>
+    </div>
+    <div class="panel">
+      <div class="panel-hdr"><div class="panel-title">Emulator</div><div class="panel-badge">CI · GitHub Actions</div></div>
+      <div style="font-size:42px;font-weight:800;color:#34d399">76.8%</div>
+      <div style="font-size:13px;color:#64748b;margin-bottom:14px">↑ 3.0% from last build</div>
+      <div class="prog"><div class="prog-fill" style="width:76.8%;background:linear-gradient(90deg,#6d28d9,#7c6af7)"></div></div>
+    </div>
+  </div>
+  <div class="sec-label" style="margin-bottom:12px">Drill-down</div>
+  <div class="drilldown">
+    <div class="drill-hdr">
+      <div class="drill-path">src / network / packet_handler.cpp</div>
+      <span style="font-size:11px;color:#64748b">T0 · Switch</span>
+      <div class="drill-pct">34% covered — 112/330 lines</div>
+    </div>
+    <div class="code-view">
+      <div class="cl"><span class="ln">41</span><span class="cv">✓</span><span class="cc">&nbsp;&nbsp;this->buffer = new uint8_t[MAX_BUF];</span></div>
+      <div class="cl"><span class="ln">42</span><span class="cv">✓</span><span class="cc">&nbsp;&nbsp;if (packet.valid()) {</span></div>
+      <div class="cl"><span class="ln">43</span><span class="cv">✓</span><span class="cc">&nbsp;&nbsp;&nbsp;&nbsp;process(packet);</span></div>
+      <div class="cl"><span class="ln">44</span><span class="mv">✗</span><span class="mc">&nbsp;&nbsp;&nbsp;&nbsp;handle_error(packet);</span></div>
+      <div class="cl"><span class="ln">45</span><span class="mv">✗</span><span class="mc">&nbsp;&nbsp;&nbsp;&nbsp;log_drop(packet.id);</span></div>
+      <div class="cl"><span class="ln">47</span><span class="cv">✓</span><span class="cc">&nbsp;&nbsp;return 0;</span></div>
+    </div>
+    <div style="display:flex;gap:14px;margin-top:10px;font-size:11px;color:#64748b"><span>✓ covered</span><span>✗ missed</span><span>– not executable</span></div>
+  </div>
+</div>
+
+<script>
+const labels = ['04/17','04/18','04/19','04/20','04/21','04/22','04/23'];
+
+const allData = {
+  T0: {
+    All:  { p:[530,1636,1693,1699,1698,1660,1155], f:[12,48,42,44,44,52,15], b:[6,28,28,26,26,18,6], s:[3,10,8,8,8,6,3], r:[96,95,98,98,98,96,98] },
+    base: { p:[120,320,330,328,330,310,200], f:[4,10,8,8,6,12,4], b:[2,6,6,5,5,4,2], s:[1,2,2,2,2,2,1], r:[95,96,97,97,98,95,97] },
+    l2:   { p:[110,300,315,318,316,300,180], f:[3,9,7,7,7,10,3], b:[2,5,5,5,4,4,2], s:[1,2,2,2,2,1,1], r:[96,96,98,98,97,96,97] },
+    l3:   { p:[100,290,310,312,310,295,175], f:[2,8,6,6,7,9,2], b:[1,5,5,4,4,3,1], s:[0,2,1,1,1,1,0], r:[97,96,98,98,97,96,98] },
+    mgmt: { p:[120,400,420,420,420,415,350], f:[2,14,14,14,16,14,4], b:[1,8,8,8,8,5,1], s:[1,3,3,3,3,2,1], r:[97,96,97,97,97,97,99] },
+    qos:  { p:[80,326,318,321,322,340,250], f:[1,7,7,9,8,7,2], b:[0,4,4,4,5,2,0], s:[0,1,0,0,0,0,0], r:[98,97,98,97,97,98,99] },
+  },
+  'T1-lag': {
+    All:  { p:[420,1500,1560,1570,1565,1540,1050], f:[15,55,48,46,48,58,18], b:[8,30,30,28,28,22,8], s:[4,12,10,10,10,8,4], r:[94,95,97,97,97,95,97] },
+    base: { p:[100,295,310,308,310,295,185], f:[5,12,10,9,8,14,5], b:[3,7,7,6,6,5,3], s:[1,3,2,2,2,2,1], r:[93,95,96,97,97,94,96] },
+    l2:   { p:[95,280,298,302,300,285,170], f:[4,10,8,7,7,11,4], b:[2,6,6,5,5,4,2], s:[1,2,2,2,2,1,1], r:[94,95,97,98,97,95,97] },
+    l3:   { p:[90,275,295,298,296,280,168], f:[3,9,7,7,8,10,3], b:[2,5,5,4,4,3,2], s:[0,2,1,1,1,1,0], r:[95,95,97,97,96,95,97] },
+    mgmt: { p:[85,360,395,400,397,390,330], f:[2,16,16,16,18,16,5], b:[1,9,9,9,9,6,1], s:[1,3,3,3,3,2,1], r:[96,95,96,96,96,96,98] },
+    qos:  { p:[50,290,262,262,262,290,197], f:[1,8,7,7,7,7,1], b:[0,3,3,3,4,4,0], s:[0,2,0,0,0,0,0], r:[98,97,97,97,97,97,99] },
+  }
+};
+
+let currentSuite = 'All';
+let chartT0, chartT1;
+
+function makeDatasets(topo, suite) {
+  const d = allData[topo][suite];
+  return [
+    { type:'bar',  label:'Passed',    data:d.p, backgroundColor:'#34d399', stack:'s' },
+    { type:'bar',  label:'Failed',    data:d.f, backgroundColor:'#f87171', stack:'s' },
+    { type:'bar',  label:'Broken',    data:d.b, backgroundColor:'#fb923c', stack:'s' },
+    { type:'bar',  label:'Skipped',   data:d.s, backgroundColor:'#a855f7', stack:'s' },
+    { type:'line', label:'Pass Rate', data:d.r, borderColor:'#fff', borderWidth:2,
+      borderDash:[6,4], pointBackgroundColor:'#fff', pointRadius:4,
+      yAxisID:'yRate', tension:0.3 }
+  ];
+}
+
+const chartOpts = {
+  responsive:true, maintainAspectRatio:false,
+  interaction:{ mode:'index' },
+  plugins:{ legend:{ display:false } },
+  scales:{
+    x:{ stacked:true, ticks:{color:'#64748b'}, grid:{color:'#2d3147'} },
+    y:{ stacked:true, ticks:{color:'#64748b'}, grid:{color:'#2d3147'},
+        title:{display:true,text:'Tests',color:'#64748b',font:{size:10}} },
+    yRate:{ position:'right', min:0, max:100,
+            ticks:{color:'#64748b', callback:v=>v+'%'},
+            grid:{drawOnChartArea:false},
+            title:{display:true,text:'Pass %',color:'#64748b',font:{size:10}} }
+  }
+};
+
+function buildCharts() {
+  if (chartT0) chartT0.destroy();
+  if (chartT1) chartT1.destroy();
+  chartT0 = new Chart(document.getElementById('chartT0').getContext('2d'), {
+    data:{ labels, datasets: makeDatasets('T0', currentSuite) },
+    options: JSON.parse(JSON.stringify(chartOpts))
+  });
+  chartT1 = new Chart(document.getElementById('chartT1').getContext('2d'), {
+    data:{ labels, datasets: makeDatasets('T1-lag', currentSuite) },
+    options: JSON.parse(JSON.stringify(chartOpts))
+  });
+}
+
+function setSuite(el, suite) {
+  document.querySelectorAll('.suite-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  currentSuite = suite;
+  const label = suite === 'All' ? 'All Suites' : suite + ' suite';
+  document.getElementById('t0-subtitle').textContent = label + ' · 7-day trend';
+  document.getElementById('t1-subtitle').textContent = label + ' · 7-day trend';
+  buildCharts();
+}
+
+function showPage(name, el) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+buildCharts();
+</script>
+</body>
+</html>

@@ -73,7 +73,7 @@ runs
   github_workflow_run_id, github_check_run_id
 
 coverage_reports
-  id, run_id → runs, format (lcov|gcovr|coverage_xml|...),
+  id, run_id → runs, format (lcov|gcovr|coverage_xml|allure|...),
   raw_artifact_path, parsed_at, total_lines, covered_lines, pct
 
 coverage_files
@@ -82,11 +82,18 @@ coverage_files
 
 coverage_lines
   id, file_id → coverage_files, line_number, hit_count
+
+test_results
+  id, run_id → runs, suite (All|base|l2|l3|mgmt|qos|...),
+  passed, failed, broken, skipped, total, pass_rate,
+  source (allure|gtest|pytest), allure_launch_id
 ```
 
 - `environment` + `topology` drive the split panels in the UI
+- `suite` on `test_results` drives the suite sub-tabs (All, base, l2, l3, mgmt, qos)
 - `coverage_lines` is only queried on drill-down, keeping summary views fast
-- New environments or topologies appear automatically — no schema changes needed
+- New environments, topologies, or suites appear automatically — no schema changes needed
+- `allure_launch_id` links back to the source launch in Allure TestOps for deep-link drill-through
 
 ### Plugin Registry
 
@@ -97,13 +104,15 @@ plugins/
     gcovr.py         ← gcovr coverage.xml
     coverage_xml.py  ← pytest coverage.xml
     gtest_xml.py     ← GTest JUnit XML (Phase 2)
-    allure.py        ← Allure results (Phase 2)
   connectors/
+    allure.py        ← PRIMARY: pull results from Allure TestOps API (http://monitoring:8081/)
     github.py        ← artifact pull, PR status checks
     jenkins.py       ← artifact fetch from Jenkins
 ```
 
 Adding a new format = add one file under `parsers/`. No core changes.
+
+**Allure connector is priority one.** The team already runs Allure TestOps at `http://monitoring:8081/`. The connector polls the Allure API for completed launches, pulls pass/fail/broken/skipped counts per suite per topology, and writes them to Postgres. Raw artifact parsing is a fallback for environments not yet connected to Allure.
 
 ### CI Integration
 
@@ -131,6 +140,7 @@ Authentication: API key per CI system, rotatable without code changes.
 
 ### Frontend Layout
 
+**Code Coverage tab:**
 ```
 ┌─────────────────────────────────────────────────────┐
 │  EXEC SUMMARY BAR (always visible)                  │
@@ -146,30 +156,46 @@ Authentication: API key per CI system, rotatable without code changes.
 
 ┌─────────────────────────────────────────────────────┐
 │  DRILL-DOWN (click any file to open)                │
-│  src/network/packet_handler.cpp   68% covered       │
-│                                                     │
 │  42  ✓  if (packet.valid()) {                       │
-│  43  ✓    process(packet);                          │
 │  44  ✗    handle_error(packet);                     │
-│  45  -  }                                           │
 │  ✓ covered  ✗ missed  - not executable              │
 └─────────────────────────────────────────────────────┘
 ```
 
+**Test Results tab (Phase 2 — sourced from Allure TestOps):**
+```
+┌─────────────────────────────────────────────────────┐
+│  ✏ Nightly Test Results    ● Synced from Allure     │
+│  [All] [base] [l2] [l3] [mgmt] [qos]  ← suite tabs │
+│  (selecting a suite updates BOTH charts below)      │
+├──────────────────────┬──────────────────────────────┤
+│  T0 Topology         │  T1-LAG Topology             │
+│  7-day stacked bars  │  7-day stacked bars          │
+│  Passed/Failed/      │  Passed/Failed/              │
+│  Broken/Skipped      │  Broken/Skipped              │
+│  + dotted pass rate  │  + dotted pass rate          │
+└──────────────────────┴──────────────────────────────┘
+```
+
 - Exec summary bar: always visible, read-only, no login required
 - Switch panel: grouped by topology (T0, T1-lag), expandable as new topologies are added
-- Trend lines: last 14 builds, so regressions are immediately visible
+- Trend lines: last 14 builds for coverage, last 7 days for test results
 - Drill-down: inline below panels, not a new page
+- Suite tab selection applies to both T0 and T1-lag charts simultaneously
+- Pass rate shown as dotted line on right axis (0–100%), test count on left axis
 
 ---
 
 ## Phases 2–4 (Planned, Not Yet Designed)
 
 ### Phase 2: Multi-framework Test Results
-- Ingest GTest XML, pytest XML/JSON, Allure results
-- Display pass/fail/skip counts per run per environment
-- Test history and flakiness tracking
-- Same split environment panels as coverage
+- **Primary source: Allure TestOps** running at `http://monitoring:8081/` — connector polls API for completed launches
+- Display pass/failed/broken/skipped per suite (All, base, l2, l3, mgmt, qos) per topology
+- **Two side-by-side charts**: T0 Topology (left) and T1-LAG Topology (right), always visible together
+- Suite tab selection filters both charts simultaneously
+- 7-day trend with stacked bars + dotted pass rate line (mirrors existing Allure view)
+- Fallback ingestion: GTest XML, pytest XML for environments not yet in Allure
+- Flakiness tracking (future): tests that alternate pass/fail across runs
 
 ### Phase 3: Bug Tracking (Jira Integration)
 - Click-to-filter interface for execs (no JQL required)
