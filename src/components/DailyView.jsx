@@ -1,8 +1,9 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db'
 import { format, isToday, isYesterday } from 'date-fns'
 import { toDateKey, getGreeting } from '../utils/helpers'
+import toast from 'react-hot-toast'
 import TaskItem from './TaskItem'
 import TaskModal from './TaskModal'
 import MoodTracker from './MoodTracker'
@@ -10,12 +11,36 @@ import LearningsPanel from './LearningsPanel'
 import { Plus, ChevronLeft, ChevronRight, Calendar, Sparkles, ListTodo, Trophy, Zap } from 'lucide-react'
 import Mascot from './Mascot'
 
+async function carryOverInProgressTasks(todayKey) {
+  const inProgress = await db.tasks.where('status').equals('in-progress').toArray()
+  const stale = inProgress.filter(t => t.date < todayKey)
+  if (stale.length === 0) return 0
+  await db.transaction('rw', db.tasks, async () => {
+    for (const task of stale) {
+      await db.tasks.update(task.id, { date: todayKey })
+    }
+  })
+  return stale.length
+}
+
 export default function DailyView() {
   const [currentDate, setCurrentDate] = useState(new Date())
   const [showModal, setShowModal] = useState(false)
   const [editingTask, setEditingTask] = useState(null)
+  const carryOverDone = useRef(false)
 
   const dateKey = toDateKey(currentDate)
+
+  useEffect(() => {
+    if (carryOverDone.current) return
+    carryOverDone.current = true
+    const todayKey = toDateKey(new Date())
+    carryOverInProgressTasks(todayKey).then(count => {
+      if (count > 0) {
+        toast(`${count} in-progress task${count > 1 ? 's' : ''} carried over to today`, { icon: '📋', duration: 4000 })
+      }
+    }).catch(err => console.error('Carry-over failed:', err))
+  }, [])
 
   const tasks = useLiveQuery(
     () => db.tasks.where('date').equals(dateKey).toArray(),

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { db } from '../db'
 import { MOOD_EMOJIS, MOOD_LABELS, ENERGY_EMOJIS, ENERGY_LABELS, toDateKey } from '../utils/helpers'
 
@@ -7,6 +7,23 @@ export default function MoodTracker({ date, existingLog, onSaved }) {
   const [mood, setMood] = useState(existingLog?.mood ?? null)
   const [energy, setEnergy] = useState(existingLog?.energy ?? null)
   const [saved, setSaved] = useState(!!existingLog)
+  const [userEdited, setUserEdited] = useState(false)
+  const prevDateKey = useRef(dateKey)
+
+  useEffect(() => {
+    if (prevDateKey.current !== dateKey) {
+      prevDateKey.current = dateKey
+      setUserEdited(false)
+    }
+  }, [dateKey])
+
+  useEffect(() => {
+    if (!userEdited) {
+      setMood(existingLog?.mood ?? null)
+      setEnergy(existingLog?.energy ?? null)
+      setSaved(!!existingLog)
+    }
+  }, [dateKey, existingLog?.mood, existingLog?.energy, existingLog?.id, userEdited])
 
   const handleSave = async () => {
     if (mood === null || energy === null) return
@@ -31,7 +48,7 @@ export default function MoodTracker({ date, existingLog, onSaved }) {
           {MOOD_EMOJIS.map((emoji, i) => (
             <button
               key={i}
-              onClick={() => { setMood(i); setSaved(false) }}
+              onClick={() => { setMood(i); setSaved(false); setUserEdited(true) }}
               className={`flex flex-col items-center gap-0.5 p-2 rounded-xl transition-all ${
                 mood === i
                   ? 'bg-primary-400/10 scale-110 ring-2 ring-primary-300'
@@ -52,7 +69,7 @@ export default function MoodTracker({ date, existingLog, onSaved }) {
           {ENERGY_EMOJIS.map((emoji, i) => (
             <button
               key={i}
-              onClick={() => { setEnergy(i); setSaved(false) }}
+              onClick={() => { setEnergy(i); setSaved(false); setUserEdited(true) }}
               className={`flex flex-col items-center gap-0.5 p-2 rounded-xl transition-all ${
                 energy === i
                   ? 'bg-accent-50 scale-110 ring-2 ring-accent-300'
